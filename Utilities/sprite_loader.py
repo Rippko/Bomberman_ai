@@ -15,14 +15,14 @@ def load(directory: str) -> dict:
             
         return all_sprites
     
+    # We need to get the right directory in our file system to load all sprites from which is App/Assets/directory
+    asset_directory = os.path.join((os.path.dirname(os.path.abspath(__file__))), '..', 'Assets', directory)
+
     all_actions_dictionary = {}
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    root_dir = os.path.join(current_dir, '..')
-    to_load_dir = os.path.join(root_dir, 'Assets', directory)
-    
-    for sub_directory in os.listdir(to_load_dir):
+    for sub_directory in os.listdir(asset_directory):
         all_actions_dictionary[sub_directory] = {}
-        for image in os.listdir(f'{to_load_dir}/{sub_directory}'):
-            all_actions_dictionary[sub_directory][image.split('.')[0]] = get_sprites(f'{to_load_dir}/{sub_directory}/{image}', 4, 32, 34, 3)
+        for image in os.listdir(f'{asset_directory}/{sub_directory}'):
+            current_image_path = f'{asset_directory}/{sub_directory}/{image}'
+            all_actions_dictionary[sub_directory][image.split('.')[0]] = get_sprites(current_image_path, 4, 32, 34, 3)
             
     return all_actions_dictionary
