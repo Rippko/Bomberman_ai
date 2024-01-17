@@ -1,22 +1,23 @@
 import pygame
-import sys
 from Entities.player import Player
-from Utilities.colors import Color
+from Utilities.colors import Colors
 
 class Playground():
-    def __init__(self, width, height) -> None:
+    def __init__(self, width: int, height: int) -> None:
         self.__width = width
         self.__height = height
         self.__screen = pygame.display.set_mode((self.__width, self.__height))
         self.__player = Player()
         
-    def run(self):
+    def run(self) -> None:
         clock = pygame.time.Clock()
-        
         pygame.init()
         pygame.display.set_caption("Bomberman")
         
-        self.__screen.fill(Color.GREY)
+        
+        self.__screen.fill(Colors.GREY)
+        
+        self.__player.update(self.__screen)
         
         while True:
             for event in pygame.event.get():
