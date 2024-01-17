@@ -7,7 +7,7 @@ class Playground():
         self.__width = width
         self.__height = height
         self.__screen = pygame.display.set_mode((self.__width, self.__height))
-        self.__player = Player()
+        self.__player = Player(100, 100)
         
     def run(self) -> None:
         clock = pygame.time.Clock()
@@ -15,7 +15,7 @@ class Playground():
         pygame.display.set_caption("Bomberman")
         
         
-        self.__screen.fill(Colors.GREY)
+        
         
         self.__player.update(self.__screen)
         
@@ -28,6 +28,9 @@ class Playground():
                     if event.key == pygame.K_ESCAPE:
                         pygame.quit()
                         quit()
+                        
+            self.__screen.fill(Colors.GREY)
+            self.__player.update(self.__screen)
                         
             pygame.display.update()
             clock.tick(60)
