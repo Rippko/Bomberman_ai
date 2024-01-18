@@ -8,6 +8,10 @@ class Entity():
         self._y = y
         self._all_actions = load(entity_name)
         self._direction = Vector2(0, 0)
+        self._last_update = pygame.time.get_ticks()
+        self._animation_speed = 100
+        self._current_frame = 0
+        self._current_state = 'Idle'
         
     def _move_left(self) -> None:
         self._direction.x = -1
@@ -20,6 +24,34 @@ class Entity():
     
     def _move_down(self) -> None:
         self._direction.y = 1
+    
+    def _get_direction(self) -> str:
+        if self._direction.x > 0:
+            return 'right'
+        elif self._direction.x < 0:
+            return 'left'
+        elif self._direction.y > 0:
+            return 'front'
+        elif self._direction.y < 0:
+            return 'back'
+        else:
+            return 'front'
         
-    def update(self) -> None:
-        pass
+    def _animate(self, game_display: pygame.display):
+        current_time = pygame.time.get_ticks()
+        delta_time = current_time - self._last_update
+        
+        current_image = self._all_actions[self._current_state][self._get_direction()][self._current_frame]
+        
+        game_display.blit(current_image, (self._x, self._y))
+        
+        if delta_time >= self._animation_speed:
+            if self._current_frame < len(self._all_actions[self._current_state][self._get_direction()]) - 1:
+                self._current_frame += 1
+            else:
+                self._current_frame = 0
+        
+            self._last_update = current_time
+        
+    def update(self, game_display: pygame.display) -> None:
+        self._animate(game_display)
