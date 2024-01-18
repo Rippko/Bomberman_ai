@@ -2,8 +2,7 @@ import pygame
 import os
 from Utilities.colors import Colors
 
-def load(directory: str) -> dict:
-    def get_sprites(file_path: str, frames: int, width: int, height: int, scale: float) -> list:
+def get_sprites(file_path: str, frames: int, width: int, height: int, scale: float) -> list:
         all_sprites = []
         sprite_sheet = pygame.image.load(file_path).convert_alpha()
         for i in range(frames):
@@ -14,7 +13,8 @@ def load(directory: str) -> dict:
             all_sprites.append(image)
             
         return all_sprites
-    
+
+def load(directory: str) -> dict:
     # We need to get the right directory in our file system to load all sprites from which is App/Assets/directory
     asset_directory = os.path.join((os.path.dirname(os.path.abspath(__file__))), '..', 'Assets', directory)
 
