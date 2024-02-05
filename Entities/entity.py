@@ -20,9 +20,15 @@ class Entity():
                        'Walking': WalkingState('Walking')
                        }
         
-        self._rect = self._all_actions['Idle']['front'][0].get_rect(center=(x,y))
+        self.image = self._all_actions['Idle']['front'][0]
         
-        self._movement_speed = 5
+        self.__shrink_width = 25
+        self.__shrink_height = 30
+        
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.rect.inflate_ip(-self.__shrink_width, -self.__shrink_height)
+
+        self._movement_speed = 3
         
         
     def _move_left(self) -> None:
@@ -70,42 +76,40 @@ class Entity():
           
     def _move_horizontal(self):
         self._x += self._direction.x * self._movement_speed
-        self._rect.x = self._x        
+        self.rect.x = self._x + (self.__shrink_width // 2)
       
     def _horizontal_collisions(self, collidables) -> bool:
         collided = False
         
         for tile in collidables:
-            if tile.colliderect(self._rect):
+            if tile.colliderect(self.rect):
                 if self._direction.x < 0:
-                    self._rect.left = tile.right
-                    self._x = self._rect.x
-                    # else:
-                    #     self._move_right()
+                    self.rect.left = tile.right
+                    self._x = self.rect.x - (self.__shrink_width // 2)
                             
                 elif self._direction.x > 0:
-                    self._rect.right = tile.left
-                    self._x = self._rect.x
-                    # else:
-                    #     self._move_left()
+                    self.rect.right = tile.left
+                    self._x = self.rect.x - (self.__shrink_width // 2)
+                    
                 collided = True
             
         return collided
     
     def _move_vertical(self):
         self._y += self._direction.y * self._movement_speed
-        self._rect.y = self._y 
+        self.rect.y = self._y + self.__shrink_height
     
     def _vertical_collisions(self, collidables) -> bool:
         collided = False
+        
         for tile in collidables:
-            if tile.colliderect(self._rect):
+            if tile.colliderect(self.rect):
                 if self._direction.y > 0:
-                    self._rect.bottom = tile.top
-                    self._y = self._rect.y
+                    self.rect.bottom = tile.top
+                    self._y = self.rect.y - self.__shrink_height
                 elif self._direction.y < 0:
-                    self._rect.top = tile.bottom
-                    self._y = self._rect.y
+                    self.rect.top = tile.bottom
+                    self._y = self.rect.y - self.__shrink_height
                 collided = True
         return collided
     
