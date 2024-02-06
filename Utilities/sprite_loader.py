@@ -1,6 +1,6 @@
 import pygame
 import os
-from Utilities.colors import Colors
+from Utilities.settings import *
 
 def get_sprites(file_path: str, n_frames: int, s_width: int, s_height: int, scale: float) -> list:
         all_sprites = []
@@ -9,7 +9,7 @@ def get_sprites(file_path: str, n_frames: int, s_width: int, s_height: int, scal
             image = pygame.Surface((s_width, s_height)).convert_alpha()
             image.blit(sprite_sheet, (0, 0), ((i * s_width), 0, s_width, s_height))
             image = pygame.transform.scale(image, (s_width * scale, s_height * scale))
-            image.set_colorkey(Colors.BLACK)
+            image.set_colorkey(BLACK)
             all_sprites.append(image)
             
         return all_sprites
