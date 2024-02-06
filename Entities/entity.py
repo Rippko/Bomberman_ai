@@ -3,7 +3,7 @@ from Utilities.sprite_loader import load
 from pygame.math import Vector2
 from States.Entity.idling_state import IdlingState
 from States.Entity.walking_state import WalkingState
-from Utilities.colors import Colors
+from Utilities.settings import *
 
 class Entity():
     def __init__(self, x: int, y: int, entity_name: str, n_frames: int, s_width: int, s_height: int, scale) -> None:
