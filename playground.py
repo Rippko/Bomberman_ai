@@ -7,6 +7,7 @@ from Obstacles.crate import Crate
 from bomb import Bomb
 import random
 
+
 class Playground():
     def __init__(self, width: int, height: int) -> None:
         self.__width = width
