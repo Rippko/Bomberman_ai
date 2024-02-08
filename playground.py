@@ -25,7 +25,7 @@ class Playground():
         
         self.__grid = self.__origin_grid.copy()
         
-        self.__player = Player(self.__origin_grid[0][0].x, self.__origin_grid[0][1].y, 'player_character', 4, 32, 32, 2)
+        self.__player = Player(self.__origin_grid[0][0].x, self.__origin_grid[0][0].y, 'player_character', 4, 32, 32, 2)
         self.__fullscreen = False
         self.__monitor_resolution = [pygame.display.Info().current_w, pygame.display.Info().current_h]
         
@@ -61,16 +61,16 @@ class Playground():
                     continue
                 if i % 2 == 0 and j % 2 == 0:
                     self.__playground.append(Wall(self.__origin_grid[j][i].x, self.__origin_grid[j][i].y, tile_width, tile_height))
-                    self.__origin_grid[j][i].isWall = True
+                    self.__origin_grid[j][i].isEmpty = True
 
-        n_crates = 120
+        n_crates = 160
         for i in range(n_crates):
             x = random.randint(0, cols - 1)
             y = random.randint(0, rows - 1)
-            if self.__origin_grid[y][x].isWall or (x == 0 and y == 0) or (x == cols - 1 and y == rows - 1) or (x == 0 and y == rows - 1) or (x == cols - 1 and y == 0) or (x == 1 and y == 0) or (x == 0 and y == 1) or (x == cols - 2 and y == rows - 1) or (x == cols - 1 and y == rows - 2) or (x == 1 and y == rows - 1) or (x == 0 and y == rows - 2) or (x == cols - 2 and y == 0) or (x == cols - 1 and y == 1) or (x == 1 and y == 1) or (x == 1 and y == rows - 2) or (x == cols - 2 and y == 1):
+            if self.__origin_grid[y][x].isEmpty or (0 <= x <= 1 or cols - 2 <= x <= cols - 1) and (0 <= y <= 1 or rows - 2 <= y <= rows - 1):
                 continue
             self.__playground.append(Crate(self.__origin_grid[y][x].x, self.__origin_grid[y][x].y, tile_width, tile_height))
-            self.__origin_grid[y][x].isWall = True
+            self.__origin_grid[y][x].isEmpty = True
         
     
     def __resize_grid(self, width: int, height: int) -> None:
@@ -140,9 +140,9 @@ class Playground():
 
             self.__screen.blit(self.__current_background, (0, 0))
 
-            # for row in self.__origin_grid:
-            #     for tile in row:
-            #         pygame.draw.rect(self.__screen, BLUE, tile.rect, 2, 2)
+            for row in self.__origin_grid:
+                for tile in row:
+                    pygame.draw.rect(self.__screen, BLUE, tile.rect, 2, 2)
 
             for coll in collidables:
                 pygame.draw.rect(self.__screen, RED, coll, 2)
