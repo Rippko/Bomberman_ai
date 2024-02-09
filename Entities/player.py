@@ -5,10 +5,12 @@ from bomb import Bomb
 from Utilities.settings import *
 
 class Player(Entity):
-    def __init__(self, x, y, entity_name, n_frames: int, s_width: int, s_height: int, scale) -> None:
+    def __init__(self, x, y, entity_name, n_frames: int, s_width: int, s_height: int, scale, grid: list) -> None:
         super().__init__(x, y, entity_name, n_frames, s_width, s_height, scale)
         self._movement_speed = 5
+        self.__grid = grid
         self.__bombs = pygame.sprite.Group()
+        
         
     def __check_keys(self, pressed_keys) -> None:
         self._direction = Vector2(0, 0)
@@ -31,8 +33,11 @@ class Player(Entity):
         if collided: self._direction.y = 0
         
     def __place_bomb(self):
-        self.__bombs.add(Bomb(self._x, self._y))
-        
+        for row in self.__grid:
+            for tile in row:
+                if int(self.rect.centerx) in range(int(tile.rect.x), int(tile.rect.x) + int(tile.rect.width)) and int(self.rect.centery) in range(int(tile.rect.y), int(tile.rect.y) + int(tile.rect.height)):
+                    self.__bombs.add(Bomb(tile.rect.x, tile.rect.y))
+                    return
     
     def update(self, game_display: pygame.display, pressed_keys, collidables: list[pygame.Rect]) -> None:
         self.__check_keys(pressed_keys)
@@ -46,6 +51,6 @@ class Player(Entity):
         self._move_vertical()
         self.__handle_vertical_collisions(self._vertical_collisions(collidables))
         
-        pygame.draw.rect(game_display, GREEN, (self.rect.x, self.rect.y, self.rect.w, self.rect.h))
+        #pygame.draw.rect(game_display, GREEN, (self.rect.x, self.rect.y, self.rect.w, self.rect.h))
         
         super().update(game_display)
