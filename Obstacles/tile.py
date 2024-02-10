@@ -6,6 +6,6 @@ class Tile ():
         self.x = x
         self.y = y
         self.tile_size = tile_size
-        self.isEmpty = False
+        self.isEmpty = True
         self.rect = pygame.Rect(self.x, self.y, self.tile_size, self.tile_size)
         
