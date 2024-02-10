@@ -21,12 +21,15 @@ def load(directory: str, n_frames: int, s_width: int, s_height: int, scale: floa
     all_actions_dictionary = {}
     for sub_directory in os.listdir(asset_directory):
         sub_directory_path = os.path.join(asset_directory, sub_directory)
-
         # Check if sub_directory is a directory and is not empty
         if os.path.isdir(sub_directory_path) and any(os.path.isfile(os.path.join(sub_directory_path, f)) for f in os.listdir(sub_directory_path)):
             all_actions_dictionary[sub_directory] = {}
             for image in os.listdir(sub_directory_path):
+                print(image)
                 current_image_path = os.path.join(sub_directory_path, image)
                 all_actions_dictionary[sub_directory][image.split('.')[0]] = get_sprites(current_image_path, n_frames, s_width, s_height, scale)
+                
+        else:
+            all_actions_dictionary[sub_directory.split('.')[0]] = get_sprites(sub_directory_path, n_frames, s_width, s_height, scale)
             
     return all_actions_dictionary
