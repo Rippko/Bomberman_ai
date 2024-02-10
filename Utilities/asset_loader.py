@@ -9,5 +9,5 @@ class AssetLoader(object):
         return cls.__instance
     
     def __init__(self) -> None:
-        self.wall_img = pygame.image.load('Assets/Wall/wall.png')
-        self.crate_img = pygame.image.load('Assets/Crate/crate.png')
+        self.wall_img = pygame.image.load('Assets/Wall/wall.png').convert_alpha()
+        self.crate_img = pygame.image.load('Assets/Crate/crate.png').convert_alpha()
