@@ -39,8 +39,15 @@ class Player(Entity):
                     self.__bombs.add(Bomb(tile.rect.x, tile.rect.y))
                     return
     
-    def update(self, game_display: pygame.display, pressed_keys, collidables: list[pygame.Rect]) -> None:
+    def update(self, game_display: pygame.display, pressed_keys) -> None:
         self.__check_keys(pressed_keys)
+        collidables = [tile.rect for row in self.__grid for tile in row if not tile.isEmpty]
+
+        for bomb in self.__bombs:
+            if self.rect.colliderect(bomb.rect):
+                continue
+            else:
+                collidables.append(bomb.rect)
 
         self.__bombs.draw(game_display)
         self.__bombs.update()
@@ -50,7 +57,7 @@ class Player(Entity):
         
         self._move_vertical()
         self.__handle_vertical_collisions(self._vertical_collisions(collidables))
-        
+
         #pygame.draw.rect(game_display, GREEN, (self.rect.x, self.rect.y, self.rect.w, self.rect.h))
         
         super().update(game_display)
