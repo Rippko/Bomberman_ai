@@ -5,8 +5,8 @@ from bomb import Bomb
 from Utilities.settings import *
 
 class Player(Entity):
-    def __init__(self, x, y, entity_name, n_frames: int, s_width: int, s_height: int, scale, grid: list) -> None:
-        super().__init__(x, y, entity_name, n_frames, s_width, s_height, scale)
+    def __init__(self, coords: tuple, entity_name: str, n_frames: int, s_width: int, s_height: int, scale, grid: list) -> None:
+        super().__init__(coords[0], coords[1], entity_name, n_frames, s_width, s_height, scale)
         self._movement_speed = 5
         self.__grid = grid
         self.__bombs = pygame.sprite.Group()
@@ -49,8 +49,7 @@ class Player(Entity):
             else:
                 collidables.append(bomb.rect)
 
-        self.__bombs.draw(game_display)
-        self.__bombs.update()
+        self.__bombs.update(game_display)
         
         self._move_horizontal()
         self.__handle_horizontal_collisions(self._horizontal_collisions(collidables))
