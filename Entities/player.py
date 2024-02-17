@@ -8,13 +8,14 @@ from Utilities.settings import *
 from map import Map
 
 class Player(Entity):
-    def __init__(self, coords: tuple, entity_name: str, n_frames: int, s_width: int, s_height: int, scale, map: Map) -> None:
+    def __init__(self, coords: tuple, entity_name: str, n_frames: int, s_width: int, s_height: int, scale, map: Map, game_display: pygame.display) -> None:
         super().__init__(coords[0], coords[1], entity_name, n_frames, s_width, s_height, scale)
+        self.__game_display = game_display
         self._movement_speed = 5
         self.__map = map
         self.__grid = self.__map.current_map
         self.__bombs = pygame.sprite.Group()
-        self.__max_bombs = 2
+        self.__max_bombs = 1
         
         
     def __check_keys(self, pressed_keys) -> None:
@@ -44,13 +45,13 @@ class Player(Entity):
         for row in self.__grid:
             for tile in row:
                 if self.__check_bomb_placement(tile) and not isinstance(tile, Bomb):
-                    bomb = Bomb(tile.rect.x, tile.rect.y)
+                    bomb = Bomb(tile.rect.x, tile.rect.y, self.__game_display)
                     bomb.add_observer(self.__map)
                     self.__bombs.add(bomb)
                     self.__grid[self.__grid.index(row)][row.index(tile)] = bomb
                     return
     
-    def update(self, game_display: pygame.display, pressed_keys) -> None:
+    def update(self, pressed_keys) -> None:
         self.__check_keys(pressed_keys)
         # collidables = [tile.rect for row in self.__grid for tile in row if not isinstance(tile, Bomb) and not tile.isEmpty]
         collidables = [tile.rect for row in self.__grid for tile in row if isinstance(tile, Wall) or isinstance(tile, Crate)]
@@ -61,7 +62,7 @@ class Player(Entity):
             else:
                 collidables.append(bomb.rect)
 
-        self.__bombs.update(game_display)
+        self.__bombs.update()
         
         self._move_horizontal()
         self.__handle_horizontal_collisions(self._horizontal_collisions(collidables))
@@ -71,4 +72,4 @@ class Player(Entity):
 
         #pygame.draw.rect(game_display, GREEN, (self.rect.x, self.rect.y, self.rect.w, self.rect.h))
         
-        super().update(game_display)
+        super().update(self.__game_display)
