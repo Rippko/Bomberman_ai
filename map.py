@@ -101,51 +101,68 @@ class Map(Observer):
                 if isinstance(tile, Wall) or isinstance(tile, Crate):
                     game_display.blit(tile.image, (tile.rect.x, tile.rect.y))
                     
-    def __check_left(self, x: int, y: int, radius: int):
+    def __check_left(self, x: int, y: int, radius: int, crate_positions: list):
         for k in range(1, radius + 1):
             if 0 <= y - k < len(self.current_map[x]):
-                if isinstance(self.current_map[x][y - k], Crate):
-                    self.current_map[x][y - k] = Tile(self.current_map[x][y - k].rect.x, self.current_map[x][y - k].rect.y, self.current_map[x][y - k].rect.width)
+                tile = self.current_map[x][y - k]
+                if isinstance(tile, Wall):
                     break
-                elif isinstance(self.current_map[x][y - k], Wall):
-                    break
+                elif isinstance(tile, Crate) or isinstance(tile, Tile):
+                    crate_positions.append((tile, x, y - k))
+                    if isinstance(tile, Crate):
+                        break
     
-    def __check_right(self, x: int, y: int, radius: int):
+    def __check_right(self, x: int, y: int, radius: int, crate_positions: list):
         for k in range(1, radius + 1):
             if 0 <= y + k < len(self.current_map[x]):
-                if isinstance(self.current_map[x][y + k], Crate):
-                    self.current_map[x][y + k] = Tile(self.current_map[x][y + k].rect.x, self.current_map[x][y + k].rect.y, self.current_map[x][y + k].rect.width)
+                tile = self.current_map[x][y + k]
+                if isinstance(tile, Wall):
                     break
-                elif isinstance(self.current_map[x][y + k], Wall):
-                    break
+                elif isinstance(tile, Crate) or isinstance(tile, Tile):
+                    crate_positions.append((tile, x, y + k))
+                    if isinstance(tile, Crate):
+                        break
     
-    def __check_up(self, x: int, y: int, radius: int):
+    def __check_up(self, x: int, y: int, radius: int, crate_positions: list):
         for k in range(1, radius + 1):
             if 0 <= x - k < len(self.current_map):
-                if isinstance(self.current_map[x - k][y], Crate):
-                    self.current_map[x - k][y] = Tile(self.current_map[x - k][y].rect.x, self.current_map[x - k][y].rect.y, self.current_map[x - k][y].rect.width)
+                tile = self.current_map[x - k][y]
+                if isinstance(tile, Wall):
                     break
-                elif isinstance(self.current_map[x - k][y], Wall):
-                    break
+                elif isinstance(tile, Crate) or isinstance(tile, Tile):
+                    crate_positions.append((tile, x - k, y))
+                    if isinstance(tile, Crate):
+                        break
     
-    def __check_down(self, x: int, y: int, radius: int):
+    def __check_down(self, x: int, y: int, radius: int, crate_positions: list):
         for k in range(1, radius + 1):
             if 0 <= x + k < len(self.current_map):
-                if isinstance(self.current_map[x + k][y], Crate):
-                    self.current_map[x + k][y] = Tile(self.current_map[x + k][y].rect.x, self.current_map[x + k][y].rect.y, self.current_map[x + k][y].rect.width)
+                tile = self.current_map[x + k][y]
+                if isinstance(tile, Wall):
                     break
-                elif isinstance(self.current_map[x + k][y], Wall):
-                    break
-            
+                elif isinstance(tile, Crate) or isinstance(tile, Tile):
+                    crate_positions.append((tile, x + k, y))
+                    if isinstance(tile, Crate):
+                        break
+       
+    def __destroy_crates(self, tiles: dict) -> None:
+        for key in tiles:
+            for tile, x, y in tiles[key]:
+                if isinstance(tile, Crate):
+                    self.current_map[x][y] = Tile(tile.rect.x, tile.rect.y, tile.rect.width)
+   
     def update(self, object) -> None:
         if isinstance(object, Bomb):
+            crate_positions = {'up': [], 'down': [], 'left': [], 'right': []}
             for row in self.current_map:
                 for tile in row:
                     if isinstance(tile, Bomb):
                         x = self.current_map.index(row)
                         y = row.index(tile)
-                        self.__check_left(x, y, tile.explosion_radius)
-                        self.__check_right(x, y, tile.explosion_radius)
-                        self.__check_up(x, y, tile.explosion_radius)
-                        self.__check_down(x, y, tile.explosion_radius)
+                        self.__check_left(x, y, tile.explosion_radius, crate_positions['left'])
+                        self.__check_right(x, y, tile.explosion_radius, crate_positions['right'])
+                        self.__check_up(x, y, tile.explosion_radius, crate_positions['up'])
+                        self.__check_down(x, y, tile.explosion_radius, crate_positions['down'])
+                        object.set_explosion(crate_positions)
+                        self.__destroy_crates(crate_positions)
                         row[row.index(tile)] = Tile(tile.rect.x, tile.rect.y, tile.rect.width)
