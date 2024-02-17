@@ -16,9 +16,7 @@ class Entity():
         self._current_frame = 0
         self._current_state = IdlingState('Idle')
         
-        self.states = {'Idle': IdlingState('Idle'),
-                       'Walking': WalkingState('Walking')
-                       }
+        self.states = {'Idle': IdlingState('Idle'), 'Walking': WalkingState('Walking')}
         
         self.image = self._all_actions['Idle']['front'][0]
         
