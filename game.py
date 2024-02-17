@@ -7,13 +7,15 @@ class Game():
         self.__width = width
         self.__height = height
         pygame.init()
+        self.__screen = pygame.display.set_mode((self.__width, self.__height))
         pygame.display.set_caption('Bomberman')
-        self.__screen = pygame.display.set_mode((self.__width, self.__height), pygame.RESIZABLE)
-        self.__map = Map(self.__width, self.__height)
-        
-        self.__player = Player(self.__map.set_starting_postion(0, 0), 'player_character', 4, 32, 32, 2, self.__map.grid)
         self.__fullscreen = False
         self.__monitor_resolution = [pygame.display.Info().current_w, pygame.display.Info().current_h]
+        
+        self.__map = Map(self.__width, self.__height)
+        self.__player = Player(self.__map.set_starting_postion(0, 0), 'player_character', 4, 32, 32, 2, self.__map, self.__screen)
+        
+        self.font = pygame.font.SysFont('arialblack', 20)
         
     def __handle_windowed(self, width: int, height: int) -> None:
         self.__screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
@@ -23,11 +25,8 @@ class Game():
         self.__screen = pygame.display.set_mode(self.__monitor_resolution, pygame.FULLSCREEN)
         self.__map.resize_map(self.__monitor_resolution[0], self.__monitor_resolution[1])
         
-    def run(self) -> None:
-        clock = pygame.time.Clock()
-        
-        while True:
-            for event in pygame.event.get():
+    def __handle_events(self) -> None:
+        for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
@@ -44,14 +43,24 @@ class Game():
                             self.__handle_fullscreen()
                         else:
                             self.__handle_windowed(self.__screen.get_width(), self.__screen.get_height())
+                            
+    def __draw_text(self, text: str, font_size: int, x: int, y: int, color: tuple) -> None:
+        pass
+        
+    def run(self) -> None:
+        clock = pygame.time.Clock()
+        
+        while True:
+            self.__map.render_map(self.__screen)
+            
+            self.__handle_events()
                         
             pressed_keys = pygame.key.get_pressed()
             
             self.__player.handle_keypress(pressed_keys)
             
-            self.__map.render_map(self.__screen)
+            self.__player.update(pressed_keys)
             
-            self.__player.update(self.__screen, pressed_keys)
+            clock.tick(60)
             
             pygame.display.flip()
-            clock.tick(60)
