@@ -1,5 +1,5 @@
 import pygame
-from States.Entity.state import State
+from States.state import State
 
 class IdlingState(State):
     def __init__(self, name) -> None:
