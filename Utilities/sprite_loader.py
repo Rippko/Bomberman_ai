@@ -27,7 +27,6 @@ def load(directory: str, n_frames: int, s_width: int, s_height: int, scale: floa
             for image in os.listdir(sub_directory_path):
                 current_image_path = os.path.join(sub_directory_path, image)
                 all_actions_dictionary[sub_directory][image.split('.')[0]] = get_sprites(current_image_path, n_frames, s_width, s_height, scale)
-                
         else:
             all_actions_dictionary[sub_directory.split('.')[0]] = get_sprites(sub_directory_path, n_frames, s_width, s_height, scale)
             
