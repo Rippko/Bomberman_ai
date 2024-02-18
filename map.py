@@ -18,6 +18,7 @@ class Map(Observer):
         self.__current_background = self.__origin_background
         
         self.origin_map = []
+        self.player_map = []
         self.__create_map()
         self.current_map = self.origin_map.copy()
         
@@ -39,6 +40,7 @@ class Map(Observer):
             for j in range(self.__columns):
                 current_row.append(Tile(x1 + j * tile_width, y1 + i * tile_height, tile_width))
             self.origin_map.append(current_row)
+            self.player_map.append(current_row)
             current_row = []
             
         for i in range(self.__columns):
@@ -73,22 +75,23 @@ class Map(Observer):
         width_ratio = width / self.__current_w
         height_ratio = height / self.__current_h
         
-        for row in self.grid:
+        for row in self.current_map:
             for tile in row:
                 tile.rect.x *= width_ratio
                 tile.rect.y *= height_ratio
                 tile.rect.width *= width_ratio
                 tile.rect.height *= height_ratio
-
-        for wall in self.map:
-            wall.rect.x *= width_ratio
-            wall.rect.y *= height_ratio
-            wall.rect.width *= width_ratio
-            wall.rect.height *= height_ratio
-            if type(wall) == Crate:
-                wall.image = pygame.transform.scale(AssetLoader().crate_img, (wall.rect.width, wall.rect.height))
-            elif type(wall) == Wall:
-                wall.image = pygame.transform.scale(AssetLoader().wall_img, (wall.rect.width, wall.rect.height))
+                
+        for row in self.current_map:
+            for obstacle in row:
+                obstacle.rect.x *= width_ratio
+                obstacle.rect.y *= height_ratio
+                obstacle.rect.width *= width_ratio
+                obstacle.rect.height *= height_ratio
+                if type(obstacle) == Crate:
+                    obstacle.image = pygame.transform.scale(AssetLoader().crate_img, (obstacle.rect.width, obstacle.rect.height))
+                elif type(obstacle) == Wall:
+                    obstacle.image = pygame.transform.scale(AssetLoader().wall_img, (obstacle.rect.width, obstacle.rect.height))
 
         self.__current_w = width
         self.__current_h = height
@@ -150,19 +153,28 @@ class Map(Observer):
             for tile, x, y in tiles[key]:
                 if isinstance(tile, Crate):
                     self.current_map[x][y] = Tile(tile.rect.x, tile.rect.y, tile.rect.width)
+                    
+    def __check_player_position(self, explosion_tiles: dict) -> bool:
+        from Entities.player import Player
+        for key in explosion_tiles:
+            for tile, x, y in explosion_tiles[key]:
+                if isinstance(tile, Player):
+                    return True
+        return False
+                
    
     def update(self, object) -> None:
         if isinstance(object, Bomb):
-            crate_positions = {'up': [], 'down': [], 'left': [], 'right': []}
+            explosion_tiles = {'up': [], 'down': [], 'left': [], 'right': []}
             for row in self.current_map:
                 for tile in row:
                     if isinstance(tile, Bomb):
                         x = self.current_map.index(row)
                         y = row.index(tile)
-                        self.__check_left(x, y, tile.explosion_radius, crate_positions['left'])
-                        self.__check_right(x, y, tile.explosion_radius, crate_positions['right'])
-                        self.__check_up(x, y, tile.explosion_radius, crate_positions['up'])
-                        self.__check_down(x, y, tile.explosion_radius, crate_positions['down'])
-                        object.set_explosion(crate_positions)
-                        self.__destroy_crates(crate_positions)
+                        self.__check_left(x, y, tile.explosion_radius, explosion_tiles['left'])
+                        self.__check_right(x, y, tile.explosion_radius, explosion_tiles['right'])
+                        self.__check_up(x, y, tile.explosion_radius, explosion_tiles['up'])
+                        self.__check_down(x, y, tile.explosion_radius, explosion_tiles['down'])
+                        object.set_explosion(explosion_tiles)
+                        self.__destroy_crates(explosion_tiles)
                         row[row.index(tile)] = Tile(tile.rect.x, tile.rect.y, tile.rect.width)
