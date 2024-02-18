@@ -1,6 +1,7 @@
 import pygame
 from Entities.player import Player
 from map import Map
+from Utilities.settings import *
 
 class Game():
     def __init__(self, width: int, height: int) -> None:
@@ -14,8 +15,8 @@ class Game():
         
         self.__map = Map(self.__width, self.__height)
         self.__player = Player(self.__map.set_starting_postion(0, 0), 'player_character', 4, 32, 32, 2, self.__map, self.__screen)
-        
-        self.font = pygame.font.SysFont('arialblack', 20)
+
+        self.font = pygame.font.Font('Assets/Fonts/VCR_OSD_MONO_1.001.ttf', (35 * self.__height // self.__height))
         
     def __handle_windowed(self, width: int, height: int) -> None:
         self.__screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
@@ -24,7 +25,7 @@ class Game():
     def __handle_fullscreen(self):
         self.__screen = pygame.display.set_mode(self.__monitor_resolution, pygame.FULLSCREEN)
         self.__map.resize_map(self.__monitor_resolution[0], self.__monitor_resolution[1])
-        
+
     def __handle_events(self) -> None:
         for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -44,8 +45,9 @@ class Game():
                         else:
                             self.__handle_windowed(self.__screen.get_width(), self.__screen.get_height())
                             
-    def __draw_text(self, text: str, font_size: int, x: int, y: int, color: tuple) -> None:
-        pass
+    def __draw_text(self, text: str, x: int, y: int) -> None:
+        text_surface = self.font.render(text, True, BLACK)
+        self.__screen.blit(text_surface, (x, y))
         
     def run(self) -> None:
         clock = pygame.time.Clock()
@@ -53,8 +55,10 @@ class Game():
         while True:
             self.__map.render_map(self.__screen)
             
+            self.__draw_text('PLAYER 1', (10 * self.__width // self.__width), (5 * self.__height // self.__height))
+            
             self.__handle_events()
-                        
+            
             pressed_keys = pygame.key.get_pressed()
             
             self.__player.handle_keypress(pressed_keys)
