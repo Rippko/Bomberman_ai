@@ -11,16 +11,17 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
         self.__x = x
         self.__y = y
         self.__game_display = game_display
+        width, height = self.__game_display.get_size()
         self.images = []
         for i in range(0, 12):
             if i < 10:
                 self.images.append(pygame.image.load(f'Assets/Bomb/00{i}.png').convert_alpha())
-                self.images[i] = pygame.transform.scale(self.images[i], (70, 70))
+                self.images[i] = pygame.transform.scale(self.images[i], ((70 * width // width), (70 * height // height)))
             else:
                 self.images.append(pygame.image.load(f'Assets/Bomb/0{i}.png').convert_alpha())
-                self.images[i] = pygame.transform.scale(self.images[i], (70, 70))
+                self.images[i] = pygame.transform.scale(self.images[i], ((70 * width // width), (70 * height // height)))
         
-        self.explosion_images = load('Explosions', 12, 120, 120, 0.58)
+        self.explosion_images = load('Explosions', 12, 120, 120, 0.57)
         
         self.__last_update = pygame.time.get_ticks()
         self.index = 0
@@ -28,6 +29,7 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
         self.rect = self.image.get_rect(topleft=(self.__x, self.__y))
         self.explosion_radius = 2
         self.__animation_speed = 90
+        self.__explosion_speed = 40
         self.__exploded = False
         self.__directions = {}
     
@@ -45,13 +47,14 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
     def __check_direction(self, direction: str, image: pygame.Surface) -> pygame.Surface:
         match direction:
             case 'up':
-                return pygame.transform.rotate(image, 90).convert_alpha()
+                return pygame.transform.rotate(image, -90).convert_alpha()
             case 'down':
                 return pygame.transform.rotate(image, 90).convert_alpha()
+            case 'right':
+                return pygame.transform.flip(image, True, False).convert_alpha()
             case 'left':
                 return image
-            case 'right':
-                return image
+            
         
     def update(self) -> None:
         current_time = pygame.time.get_ticks()
@@ -73,12 +76,16 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
                 self.__last_update = current_time
         else:
             for key in self.__directions:
-                for tile, x, y in self.__directions[key]:
-                    if not isinstance(tile, Crate):
-                        self.__game_display.blit(self.explosion_images['center'][self.index], (self.rect.x, self.rect.y))
+                for i in range(len(self.__directions[key])):
+                    tile, x, y = self.__directions[key][i]
+                    self.__game_display.blit(self.explosion_images['center'][self.index], (self.rect.x, self.rect.y))
+                    if i == len(self.__directions[key]) - 1:
+                        self.__game_display.blit(self.__check_direction(key, self.explosion_images['end'][self.index]), (tile.rect.x, tile.rect.y))
+                        break
+                    elif not isinstance(tile, Crate):
                         self.__game_display.blit(self.__check_direction(key, self.explosion_images['middle'][self.index]), (tile.rect.x, tile.rect.y))
-                    
-            if delta_time >= self.__animation_speed:
+
+            if delta_time >= self.__explosion_speed:
                 if self.index < len(self.explosion_images['middle']) - 1:
                     self.index += 1
                 else:
