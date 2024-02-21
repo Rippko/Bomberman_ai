@@ -3,6 +3,7 @@ from Utilities.sprite_loader import load
 from pygame.math import Vector2
 from States.Entity.idling_state import IdlingState
 from States.Entity.walking_state import WalkingState
+from States.Entity.dying_state import DyingState
 from Utilities.settings import *
 
 class Entity():
@@ -11,12 +12,12 @@ class Entity():
         self._y = y
         self._all_actions = load(entity_name, n_frames, s_width, s_height, scale)
         self._direction = Vector2(0, 0)
-        self._last_update = pygame.time.get_ticks()
-        self._animation_speed = 150
+        self._current_delta_time = 0
+        self._animation_speed = 0.1
         self._current_frame = 0
         self._current_state = IdlingState('Idle')
         
-        self.states = {'Idle': IdlingState('Idle'), 'Walking': WalkingState('Walking')}
+        self.states = {'Idle': IdlingState('Idle'), 'Walking': WalkingState('Walking'), 'Dying': DyingState('Dying')}
         
         self.image = self._all_actions['Idle']['front'][0]
         
@@ -27,7 +28,6 @@ class Entity():
         self.rect.inflate_ip(-self.__shrink_width, -self.__shrink_height)
 
         self._movement_speed = 3
-        
         
     def _move_left(self) -> None:
         self._direction.x = -1
@@ -56,22 +56,27 @@ class Entity():
     def handle_keypress(self, keys) -> None:
         self._current_state = self.states[self._current_state.handle_event(keys)]
         
-    def _animate(self, game_display: pygame.display):
-        current_time = pygame.time.get_ticks()
-        delta_time = current_time - self._last_update
+    def set_dead(self) -> None:
+        self._current_frame = 0
+        self._current_state = self.states['Dying']
+        
+    def _animate(self, game_display: pygame.display, delta_time):
+        self._current_delta_time += delta_time
         
         current_image = self._all_actions[self._current_state.get_name()][self._get_direction()][self._current_frame]
         
         game_display.blit(current_image, (self._x, self._y))
-        
-        if delta_time >= self._animation_speed:
+         
+        if self._current_delta_time >= self._animation_speed:
             if self._current_frame < len(self._all_actions[self._current_state.get_name()][self._get_direction()]) - 1:
                 self._current_frame += 1
+            elif self._current_state.get_name() == 'Dying':
+                self._current_frame = len(self._all_actions[self._current_state.get_name()][self._get_direction()]) - 1
             else:
                 self._current_frame = 0
-        
-            self._last_update = current_time
-          
+                
+            self._current_delta_time = 0
+            
     def _move_horizontal(self):
         self._x += self._direction.x * self._movement_speed
         self.rect.x = self._x + (self.__shrink_width // 2)
@@ -111,6 +116,6 @@ class Entity():
                 collided = True
         return collided
     
-    def update(self, game_display: pygame.display) -> None:
-        self._animate(game_display)
+    def update(self, game_display: pygame.display, delta_time) -> None:
+        self._animate(game_display, delta_time)
         
