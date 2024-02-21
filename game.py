@@ -1,4 +1,4 @@
-import pygame
+import pygame, time
 from Entities.player import Player
 from map import Map
 from Utilities.settings import *
@@ -7,16 +7,22 @@ class Game():
     def __init__(self, width: int, height: int) -> None:
         self.__width = width
         self.__height = height
+        self.FPS = 60
         pygame.init()
         self.__screen = pygame.display.set_mode((self.__width, self.__height))
         pygame.display.set_caption('Bomberman')
         self.__fullscreen = False
         self.__monitor_resolution = [pygame.display.Info().current_w, pygame.display.Info().current_h]
+        self.__clock = pygame.time.Clock()
         
         self.__map = Map(self.__width, self.__height)
         self.__player = Player(self.__map.set_starting_postion(0, 0), 'player_character', 4, 32, 32, 2, self.__map, self.__screen)
+        
+        self.__map.add_player(self.__player)
 
         self.font = pygame.font.Font('Assets/Fonts/VCR_OSD_MONO_1.001.ttf', (35 * self.__height // self.__height))
+        
+        self.__last_time = time.time()
         
     def __handle_windowed(self, width: int, height: int) -> None:
         self.__screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
@@ -50,9 +56,11 @@ class Game():
         self.__screen.blit(text_surface, (x, y))
         
     def run(self) -> None:
-        clock = pygame.time.Clock()
-        
         while True:
+            current_time = time.time()
+            delta_time = current_time - self.__last_time
+            self.__last_time = current_time
+            
             self.__map.render_map(self.__screen)
             
             self.__draw_text('PLAYER 1', (10 * self.__width // self.__width), (5 * self.__height // self.__height))
@@ -63,8 +71,7 @@ class Game():
             
             self.__player.handle_keypress(pressed_keys)
             
-            self.__player.update(pressed_keys)
+            self.__player.update(pressed_keys, delta_time)
             
-            clock.tick(60)
-            
+            self.__clock.tick(self.FPS)
             pygame.display.flip()
