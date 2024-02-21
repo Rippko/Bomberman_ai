@@ -16,12 +16,14 @@ class Map(Observer):
         self.__rows = 13
         self.__origin_background = pygame.transform.scale(pygame.image.load('Assets/Backgrounds/background.png').convert_alpha(), (self.__width, self.__height))
         self.__current_background = self.__origin_background
+        self.__players = []
         
         self.origin_map = []
         self.player_map = []
         self.__create_map()
         self.current_map = self.origin_map.copy()
         
+        self.tile_width = self.origin_map[0][0].rect.width
         self.__current_w = self.__width
         self.__current_h = self.__height
     
@@ -68,6 +70,9 @@ class Map(Observer):
         
     def set_starting_postion(self, x: int, y: int) -> tuple:
         return (self.origin_map[y][x].x, self.origin_map[y][x].y)
+    
+    def add_player(self, player) -> None:
+        self.__players.append(player)
         
     def resize_map(self, width: int, height: int) -> None:
         self.__current_background = pygame.transform.scale(self.__origin_background, (width, height))
@@ -103,6 +108,10 @@ class Map(Observer):
             for tile in row:
                 if isinstance(tile, Wall) or isinstance(tile, Crate):
                     game_display.blit(tile.image, (tile.rect.x, tile.rect.y))
+                    
+        for row in self.current_map:
+            for tile in row:
+                pygame.draw.rect(game_display, BLUE, (tile.rect.x, tile.rect.y, tile.rect.width, tile.rect.height), 2)
                     
     def __check_left(self, x: int, y: int, radius: int, crate_positions: list):
         for k in range(1, radius + 1):
@@ -154,14 +163,13 @@ class Map(Observer):
                 if isinstance(tile, Crate):
                     self.current_map[x][y] = Tile(tile.rect.x, tile.rect.y, tile.rect.width)
                     
-    def __check_player_position(self, explosion_tiles: dict) -> bool:
-        from Entities.player import Player
-        for key in explosion_tiles:
-            for tile, x, y in explosion_tiles[key]:
-                if isinstance(tile, Player):
-                    return True
-        return False
-                
+    def __check_player_position(self, explosion_tiles: dict) -> None:
+        for player in self.__players:
+            for key in explosion_tiles:
+                for tile, x, y in explosion_tiles[key]:
+                    if player.check_position(tile):
+                        player.set_dead()
+
    
     def update(self, object) -> None:
         if isinstance(object, Bomb):
@@ -176,5 +184,6 @@ class Map(Observer):
                         self.__check_up(x, y, tile.explosion_radius, explosion_tiles['up'])
                         self.__check_down(x, y, tile.explosion_radius, explosion_tiles['down'])
                         object.set_explosion(explosion_tiles)
+                        self.__check_player_position(explosion_tiles)
                         self.__destroy_crates(explosion_tiles)
-                        row[row.index(tile)] = Tile(tile.rect.x, tile.rect.y, tile.rect.width)
+                        row[row.index(tile)] = Tile(tile.rect.x, tile.rect.y, self.tile_width)
