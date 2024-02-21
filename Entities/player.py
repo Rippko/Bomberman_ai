@@ -8,26 +8,21 @@ from Utilities.settings import *
 from Utilities.observable_object import ObservableObject
 from map import Map
 
-class Player(Entity, ObservableObject):
+class Player(Entity):
     def __init__(self, coords: tuple, entity_name: str, n_frames: int, s_width: int, s_height: int, scale, map: Map, game_display: pygame.display) -> None:
         super().__init__(coords[0], coords[1], entity_name, n_frames, s_width, s_height, scale)
-        ObservableObject.__init__(self)
-        self.add_observer(map)
-        
         self.__game_display = game_display
         self._movement_speed = 5
         self.__map = map
         self.__grid = self.__map.current_map
         self.__bombs = pygame.sprite.Group()
-        self.__max_bombs = 1
-        self.current_tile = self.__grid[0][0]
-        
-    def notify_observers(self) -> None:
-        for observer in self._observers:
-            observer.update(self)
+        self.__max_bombs = 2
         
     def __check_keys(self, pressed_keys) -> None:
         self._direction = Vector2(0, 0)
+        
+        self.handle_keypress(pressed_keys)
+        
         if pressed_keys[pygame.K_a] or pressed_keys[pygame.K_LEFT]:
             self._move_left()
         elif pressed_keys[pygame.K_d] or pressed_keys[pygame.K_RIGHT]:
@@ -46,46 +41,49 @@ class Player(Entity, ObservableObject):
     def __handle_vertical_collisions(self, collided: bool) -> None:
         if collided: self._direction.y = 0
         
-    def __check_position(self, tile) -> bool:
+    def check_position(self, tile) -> bool:
         return int(self.rect.centerx) in range(int(tile.rect.x), int(tile.rect.x) + int(tile.rect.width)) and int(self.rect.centery) in range(int(tile.rect.y), int(tile.rect.y) + int(tile.rect.height))
-
-    def __determine_position(self) -> None:
-        for row in self.__map.player_map:
-            for tile in row:
-                if self.__check_position(tile):
-                    self.current_tile = tile
-                    self.notify_observers()
-                    
+    
     def __place_bomb(self) -> None:
         for row in self.__grid:
             for tile in row:
-                if self.__check_position(tile) and not isinstance(tile, Bomb):
+                if self.check_position(tile) and not isinstance(tile, Bomb):
                     bomb = Bomb(tile.rect.x, tile.rect.y, self.__game_display)
                     bomb.add_observer(self.__map)
                     self.__bombs.add(bomb)
                     self.__grid[self.__grid.index(row)][row.index(tile)] = bomb
                     return
     
-    def update(self, pressed_keys) -> None:
-        self.__check_keys(pressed_keys)
+    def update(self, pressed_keys, delta_time) -> None:
         collidables = [tile.rect for row in self.__grid for tile in row if isinstance(tile, Wall) or isinstance(tile, Crate)]
-        
-        #self.__determine_position()
-        
-        for bomb in self.__bombs:
-            if self.rect.colliderect(bomb.rect):
-                continue
-            else:
-                collidables.append(bomb.rect)
+        if not self._current_state == self.states['Dying']:
+            self.__check_keys(pressed_keys)
+            for bomb in self.__bombs:
+                if self.rect.colliderect(bomb.rect):
+                    continue
+                else:
+                    collidables.append(bomb.rect)
 
-        self.__bombs.update()
-        
-        self._move_horizontal()
-        self.__handle_horizontal_collisions(self._horizontal_collisions(collidables))
-        
-        self._move_vertical()
-        self.__handle_vertical_collisions(self._vertical_collisions(collidables))
+            self.__bombs.update(delta_time)
+            
+            self._move_horizontal()
+            self.__handle_horizontal_collisions(self._horizontal_collisions(collidables))
+            
+            self._move_vertical()
+            self.__handle_vertical_collisions(self._vertical_collisions(collidables))
 
-        #pygame.draw.rect(game_display, GREEN, (self.rect.x, self.rect.y, self.rect.w, self.rect.h))
-        
-        super().update(self.__game_display)
+            #pygame.draw.rect(game_display, GREEN, (self.rect.x, self.rect.y, self.rect.w, self.rect.h))
+            
+            super().update(self.__game_display, delta_time)
+            
+        else:
+            
+            for bomb in self.__bombs:
+                if self.rect.colliderect(bomb.rect):
+                    continue
+                else:
+                    collidables.append(bomb.rect)
+
+            self.__bombs.update(delta_time)
+            
+            super().update(self.__game_display, delta_time)
