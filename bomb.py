@@ -1,6 +1,6 @@
 import pygame
 from Utilities.settings import *
-from Utilities.sprite_loader import load
+from Utilities.sprite_loader import *
 from Utilities.observable_object import ObservableObject
 from Obstacles.crate import Crate
 
@@ -12,24 +12,16 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
         self.__y = y
         self.__game_display = game_display
         width, height = self.__game_display.get_size()
-        self.images = []
-        for i in range(0, 12):
-            if i < 10:
-                self.images.append(pygame.image.load(f'Assets/Bomb/00{i}.png').convert_alpha())
-                self.images[i] = pygame.transform.scale(self.images[i], ((70 * width // width), (70 * height // height)))
-            else:
-                self.images.append(pygame.image.load(f'Assets/Bomb/0{i}.png').convert_alpha())
-                self.images[i] = pygame.transform.scale(self.images[i], ((70 * width // width), (70 * height // height)))
-        
+        self.images = get_sprites('Assets/Bomb/bomb.png', 6, (120 * width // width), (120 * height // height), 0.49)
         self.explosion_images = load('Explosions', 12, 120, 120, 0.57)
-        
-        self.__last_update = pygame.time.get_ticks()
         self.index = 0
         self.image = self.images[self.index]
         self.rect = self.image.get_rect(topleft=(self.__x, self.__y))
-        self.explosion_radius = 2
-        self.__animation_speed = 90
-        self.__explosion_speed = 40
+        self.explosion_radius = 1
+        self.__loop_counter = 0
+        self.__ticking_speed = 0.1
+        self.__explosion_speed = 0.05
+        self.current_delta_time = 0
         self.__exploded = False
         self.__directions = {}
     
@@ -56,24 +48,26 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
                 return image
             
         
-    def update(self) -> None:
-        current_time = pygame.time.get_ticks()
-        delta_time = current_time - self.__last_update
-        
+    def update(self, delta_time) -> None:
+        self.current_delta_time += delta_time
         if not self.__exploded:
             current_image = self.images[self.index]
-            
             self.__game_display.blit(current_image, (self.__x, self.__y))
             
-            if delta_time >= self.__animation_speed:
+            if self.current_delta_time >= self.__ticking_speed:
                 if self.index < len(self.images) - 1:
                     self.index += 1
 
                 if self.index >= len(self.images) - 1:
                     self.index = 0
+                    self.__loop_counter += 1
+
+                if self.__loop_counter >= 3:
                     self.__explode()
                     
-                self.__last_update = current_time
+                print( self.__loop_counter)
+                self.current_delta_time = 0
+                
         else:
             for key in self.__directions:
                 for i in range(len(self.__directions[key])):
@@ -85,10 +79,13 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
                     elif not isinstance(tile, Crate):
                         self.__game_display.blit(self.__check_direction(key, self.explosion_images['middle'][self.index]), (tile.rect.x, tile.rect.y))
 
-            if delta_time >= self.__explosion_speed:
+            if self.current_delta_time >= self.__explosion_speed:
                 if self.index < len(self.explosion_images['middle']) - 1:
                     self.index += 1
                 else:
                     self.kill()
                     
-                self.__last_update = current_time
+                self.current_delta_time = 0
+                
+                    
+        
