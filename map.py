@@ -26,6 +26,30 @@ class Map(Observer):
         self.tile_width = self.origin_map[0][0].rect.width
         self.__current_w = self.__width
         self.__current_h = self.__height
+        
+    def calculate_game_plan_size(self) -> tuple:
+        if not self.origin_map or not self.origin_map[0]:
+            return
+
+        rows, columns = len(self.origin_map), len(self.origin_map[0])
+
+        min_x, min_y = self.origin_map[0][0].x, self.origin_map[0][0].y
+        max_x, max_y = self.origin_map[0][0].x + self.origin_map[0][0].tile_size, self.origin_map[0][0].y + self.origin_map[0][0].tile_size
+
+        for row in range(rows):
+            for col in range(columns):
+                tile = self.origin_map[row][col]
+                min_x = min(min_x, tile.x)
+                min_y = min(min_y, tile.y)
+                max_x = max(max_x, tile.x + tile.tile_size)
+                max_y = max(max_y, tile.y + tile.tile_size)
+
+        width = int(max_x - min_x)
+        height = int(max_y - min_y)
+
+        print(int(min_x), int(max_x), int(min_y), int(max_y))
+        return (int(min_x), int(max_x), int(min_y), int(max_y))
+        
     
     def __create_map(self) -> None:
         x1, y1 = 0.062 * self.__width, 0.11 * self.__height
