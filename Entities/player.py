@@ -17,6 +17,7 @@ class Player(Entity):
         self.__grid = self.__map.current_map
         self.__bombs = pygame.sprite.Group()
         self.__max_bombs = 2
+        self.__bomb_strength = 1
         
         self.__map_size = self.__map.calculate_game_plan_size()
         
@@ -49,7 +50,7 @@ class Player(Entity):
         for row in self.__grid:
             for tile in row:
                 if self.check_position(tile) and not isinstance(tile, Bomb):
-                    bomb = Bomb(tile.rect.x, tile.rect.y, self.__game_display)
+                    bomb = Bomb(tile.rect.x, tile.rect.y, self.__bomb_strength, self.__game_display)
                     bomb.add_observer(self.__map)
                     self.__bombs.add(bomb)
                     self.__grid[self.__grid.index(row)][row.index(tile)] = bomb
