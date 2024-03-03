@@ -13,7 +13,7 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
         self.__game_display = game_display
         width, height = self.__game_display.get_size()
         self.images = get_sprites('Assets/Bomb/bomb.png', 6, (120 * width // width), (120 * height // height), 0.49)
-        self.explosion_images = load('Explosions', 12, 120, 120, 0.57)
+        self.explosion_images = load('Explosions', (12, 12, 12), 120, 120, 0.57)
         self.index = 0
         self.image = self.images[self.index]
         self.rect = self.image.get_rect(topleft=(self.__x, self.__y))
@@ -51,9 +51,6 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
     def update(self, delta_time) -> None:
         self.current_delta_time += delta_time
         if not self.__exploded:
-            current_image = self.images[self.index]
-            self.__game_display.blit(current_image, (self.__x, self.__y))
-            
             if self.current_delta_time >= self.__ticking_speed:
                 if self.index < len(self.images) - 1:
                     self.index += 1
@@ -64,11 +61,20 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
 
                 if self.__loop_counter >= 3:
                     self.__explode()
-                    
-                print( self.__loop_counter)
+
                 self.current_delta_time = 0
                 
+            current_image = self.images[self.index]
+            self.__game_display.blit(current_image, (self.__x, self.__y))
         else:
+            if self.current_delta_time >= self.__explosion_speed:
+                if self.index < len(self.explosion_images['middle']) - 1:
+                    self.index += 1
+                else:
+                    self.kill()
+                    
+                self.current_delta_time = 0
+                
             for key in self.__directions:
                 for i in range(len(self.__directions[key])):
                     tile, x, y = self.__directions[key][i]
@@ -79,13 +85,7 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
                     elif not isinstance(tile, Crate):
                         self.__game_display.blit(self.__check_direction(key, self.explosion_images['middle'][self.index]), (tile.rect.x, tile.rect.y))
 
-            if self.current_delta_time >= self.__explosion_speed:
-                if self.index < len(self.explosion_images['middle']) - 1:
-                    self.index += 1
-                else:
-                    self.kill()
-                    
-                self.current_delta_time = 0
+            
                 
                     
         
