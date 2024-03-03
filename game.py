@@ -16,7 +16,7 @@ class Game():
         self.__clock = pygame.time.Clock()
         
         self.__map = Map(self.__width, self.__height)
-        self.__player = Player(self.__map.set_starting_postion(0, 0), 'player_character3', (8, 7, 4), 32, 32, 2, self.__map, self.__screen)
+        self.__player = Player(self.__map.set_starting_postion(0, 0), 'player_character_purple', (8, 7, 4), 32, 32, 2, self.__map, self.__screen)
         
         self.__map.add_player(self.__player)
 
