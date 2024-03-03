@@ -109,9 +109,9 @@ class Map(Observer):
                 if isinstance(tile, Wall) or isinstance(tile, Crate):
                     game_display.blit(tile.image, (tile.rect.x, tile.rect.y))
                     
-        for row in self.current_map:
-            for tile in row:
-                pygame.draw.rect(game_display, BLUE, (tile.rect.x, tile.rect.y, tile.rect.width, tile.rect.height), 2)
+        # for row in self.current_map:
+        #     for tile in row:
+        #         pygame.draw.rect(game_display, BLUE, (tile.rect.x, tile.rect.y, tile.rect.width, tile.rect.height), 2)
                     
     def __check_left(self, x: int, y: int, radius: int, crate_positions: list):
         for k in range(1, radius + 1):
@@ -176,7 +176,7 @@ class Map(Observer):
             explosion_tiles = {'up': [], 'down': [], 'left': [], 'right': []}
             for row in self.current_map:
                 for tile in row:
-                    if isinstance(tile, Bomb):
+                    if tile == object:
                         x = self.current_map.index(row)
                         y = row.index(tile)
                         self.__check_left(x, y, tile.explosion_radius, explosion_tiles['left'])
