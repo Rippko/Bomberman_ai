@@ -5,7 +5,7 @@ from Utilities.observable_object import ObservableObject
 from Obstacles.crate import Crate
 
 class Bomb(pygame.sprite.Sprite, ObservableObject):
-    def __init__(self, x: int, y: int, game_display: pygame.display) -> None:
+    def __init__(self, x: int, y: int, bomb_strength: int, game_display: pygame.display) -> None:
         pygame.sprite.Sprite.__init__(self)
         ObservableObject.__init__(self)
         self.__x = x
@@ -17,7 +17,7 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
         self.index = 0
         self.image = self.images[self.index]
         self.rect = self.image.get_rect(topleft=(self.__x, self.__y))
-        self.explosion_radius = 1
+        self.explosion_radius = bomb_strength
         self.__loop_counter = 0
         self.__ticking_speed = 0.1
         self.__explosion_speed = 0.05
