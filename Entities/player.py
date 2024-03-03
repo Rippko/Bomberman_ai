@@ -18,20 +18,21 @@ class Player(Entity):
         self.__bombs = pygame.sprite.Group()
         self.__max_bombs = 2
         
+        self.__map_size = self.__map.calculate_game_plan_size()
+        
     def __check_keys(self, pressed_keys) -> None:
         self._direction = Vector2(0, 0)
         
         self.handle_keypress(pressed_keys)
-        
-        if pressed_keys[pygame.K_a] or pressed_keys[pygame.K_LEFT]:
+        if (pressed_keys[pygame.K_a] or pressed_keys[pygame.K_LEFT]) and self.rect.x > self.__map_size[0]:
             self._move_left()
-        elif pressed_keys[pygame.K_d] or pressed_keys[pygame.K_RIGHT]:
+        elif (pressed_keys[pygame.K_d] or pressed_keys[pygame.K_RIGHT]) and self.rect.x < (self.__map_size[1] - self.rect.width):
             self._move_right()
-        elif pressed_keys[pygame.K_w] or pressed_keys[pygame.K_UP]:
+        elif (pressed_keys[pygame.K_w] or pressed_keys[pygame.K_UP]) and self.rect.y > self.__map_size[2]:
             self._move_up()
-        elif pressed_keys[pygame.K_s] or pressed_keys[pygame.K_DOWN]:
+        elif (pressed_keys[pygame.K_s] or pressed_keys[pygame.K_DOWN]) and self.rect.y < (self.__map_size[3] - self.rect.height - 5):
             self._move_down()
-            
+                
         if pressed_keys[pygame.K_SPACE] and len(self.__bombs) < self.__max_bombs:
             self.__place_bomb()
             
@@ -77,7 +78,6 @@ class Player(Entity):
             super().update(self.__game_display, delta_time)
             
         else:
-            
             for bomb in self.__bombs:
                 if self.rect.colliderect(bomb.rect):
                     continue
