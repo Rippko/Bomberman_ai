@@ -7,7 +7,7 @@ from States.Entity.dying_state import DyingState
 from Utilities.settings import *
 
 class Entity():
-    def __init__(self, x: int, y: int, entity_name: str, n_frames: int, s_width: int, s_height: int, scale) -> None:
+    def __init__(self, x: int, y: int, entity_name: str, n_frames: tuple, s_width: int, s_height: int, scale) -> None:
         self._x = x
         self._y = y
         self._all_actions = load(entity_name, n_frames, s_width, s_height, scale)
@@ -54,28 +54,32 @@ class Entity():
             return 'front'
         
     def handle_keypress(self, keys) -> None:
-        self._current_state = self.states[self._current_state.handle_event(keys)]
+        latest_state = self.states[self._current_state.handle_event(keys)]
+        if not self._current_state == latest_state:
+            self._current_state = latest_state
+            self._current_frame = 0
         
     def set_dead(self) -> None:
-        self._current_frame = 0
-        self._current_state = self.states['Dying']
+        if not self._current_state == self.states['Dying']:
+            self._current_frame = 0
+            self._current_state = self.states['Dying']
         
     def _animate(self, game_display: pygame.display, delta_time):
         self._current_delta_time += delta_time
-        
-        current_image = self._all_actions[self._current_state.get_name()][self._get_direction()][self._current_frame]
-        
-        game_display.blit(current_image, (self._x, self._y))
          
         if self._current_delta_time >= self._animation_speed:
             if self._current_frame < len(self._all_actions[self._current_state.get_name()][self._get_direction()]) - 1:
                 self._current_frame += 1
             elif self._current_state.get_name() == 'Dying':
-                self._current_frame = len(self._all_actions[self._current_state.get_name()][self._get_direction()]) - 1
+                self._current_frame = len(self._all_actions[self._current_state.get_name()]['front']) - 1
             else:
                 self._current_frame = 0
                 
             self._current_delta_time = 0
+            
+        current_image = self._all_actions[self._current_state.get_name()][self._get_direction()][self._current_frame]
+        
+        game_display.blit(current_image, (self._x, self._y))
             
     def _move_horizontal(self):
         self._x += self._direction.x * self._movement_speed
