@@ -61,6 +61,7 @@ class Entity():
         
     def set_dead(self) -> None:
         if not self._current_state == self.states['Dying']:
+            self._direction = Vector2(0, 0)
             self._current_frame = 0
             self._current_state = self.states['Dying']
         
@@ -76,7 +77,7 @@ class Entity():
                 self._current_frame = 0
                 
             self._current_delta_time = 0
-            
+        
         current_image = self._all_actions[self._current_state.get_name()][self._get_direction()][self._current_frame]
         
         game_display.blit(current_image, (self._x, self._y))
