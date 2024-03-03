@@ -9,7 +9,7 @@ from Utilities.observable_object import ObservableObject
 from map import Map
 
 class Player(Entity):
-    def __init__(self, coords: tuple, entity_name: str, n_frames: int, s_width: int, s_height: int, scale, map: Map, game_display: pygame.display) -> None:
+    def __init__(self, coords: tuple, entity_name: str, n_frames: tuple, s_width: int, s_height: int, scale, map: Map, game_display: pygame.display) -> None:
         super().__init__(coords[0], coords[1], entity_name, n_frames, s_width, s_height, scale)
         self.__game_display = game_display
         self._movement_speed = 5
