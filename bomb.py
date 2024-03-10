@@ -78,8 +78,9 @@ class Bomb(pygame.sprite.Sprite, ObservableObject):
             for key in self.__directions:
                 for i in range(len(self.__directions[key])):
                     tile, x, y = self.__directions[key][i]
-                    self.__game_display.blit(self.explosion_images['center'][self.index], (self.rect.x, self.rect.y))
-                    if i == len(self.__directions[key]) - 1:
+                    if key == 'center':
+                        self.__game_display.blit(self.explosion_images['center'][self.index], (self.rect.x, self.rect.y))
+                    elif i == len(self.__directions[key]) - 1:
                         self.__game_display.blit(self.__check_direction(key, self.explosion_images['end'][self.index]), (tile.rect.x, tile.rect.y))
                         break
                     elif not isinstance(tile, Crate):
