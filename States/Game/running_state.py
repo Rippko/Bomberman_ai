@@ -19,8 +19,6 @@ class RunningState(GameState):
                     if event.key == pygame.K_ESCAPE:
                         new_state = PauseState(self._game)
                         new_state.enter_state()
-                        print(self._game.game_states)
-                        print('Pressed escape')
                     if event.key == pygame.K_f:
                         self._game.fullscreen = not self.__fullscreen
                         if self._game.fullscreen:
