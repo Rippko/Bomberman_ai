@@ -65,7 +65,7 @@ class Entity():
             self._current_frame = 0
             self._current_state = self.states['Dying']
         
-    def _animate(self, game_display: pygame.display, delta_time):
+    def animate(self, game_display: pygame.display, delta_time):
         self._current_delta_time += delta_time
          
         if self._current_delta_time >= self._animation_speed:
@@ -122,5 +122,5 @@ class Entity():
         return collided
     
     def update(self, game_display: pygame.display, delta_time) -> None:
-        self._animate(game_display, delta_time)
+        self.animate(game_display, delta_time)
         
