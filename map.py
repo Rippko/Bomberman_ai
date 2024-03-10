@@ -27,6 +27,9 @@ class Map(Observer):
         self.__current_w = self.__width
         self.__current_h = self.__height
         
+    def get_players(self) -> list:
+        return self.__players
+        
     def calculate_game_plan_size(self) -> tuple:
         if not self.origin_map or not self.origin_map[0]:
             return
@@ -44,10 +47,6 @@ class Map(Observer):
                 max_x = max(max_x, tile.x + tile.tile_size)
                 max_y = max(max_y, tile.y + tile.tile_size)
 
-        width = int(max_x - min_x)
-        height = int(max_y - min_y)
-
-        print(int(min_x), int(max_x), int(min_y), int(max_y))
         return (int(min_x), int(max_x), int(min_y), int(max_y))
         
     
@@ -85,12 +84,6 @@ class Map(Observer):
                 continue
             elif not isinstance(self.origin_map[y][x], Wall):
                 self.origin_map[y][x] = Crate(self.origin_map[y][x].x, self.origin_map[y][x].y, tile_width, tile_height)
-            
-        # collidables = [wall.rect for wall in self.__playground]
-        # collidables.append(pygame.Rect( 0.062 * self.__current_w, 0.11 * self.__current_h, 0.88 * self.__current_w, 2))
-        # collidables.append(pygame.Rect( 0.062 * self.__current_w, 0.11 * self.__current_h, 2, 0.76 * self.__current_h))
-        # collidables.append(pygame.Rect( 0.062 * self.__current_w, 0.87 * self.__current_h, 0.88 * self.__current_w, 2))
-        # collidables.append(pygame.Rect( 0.941 * self.__current_w, 0.11 * self.__current_h, 2, 0.76 * self.__current_h))
         
     def set_starting_postion(self, x: int, y: int) -> tuple:
         return (self.origin_map[y][x].x, self.origin_map[y][x].y)
@@ -197,12 +190,13 @@ class Map(Observer):
    
     def update(self, object) -> None:
         if isinstance(object, Bomb):
-            explosion_tiles = {'up': [], 'down': [], 'left': [], 'right': []}
+            explosion_tiles = {'up': [], 'down': [], 'left': [], 'right': [], 'center': []}
             for row in self.current_map:
                 for tile in row:
                     if tile == object:
                         x = self.current_map.index(row)
                         y = row.index(tile)
+                        explosion_tiles['center'].append((tile, x, y))
                         self.__check_left(x, y, tile.explosion_radius, explosion_tiles['left'])
                         self.__check_right(x, y, tile.explosion_radius, explosion_tiles['right'])
                         self.__check_up(x, y, tile.explosion_radius, explosion_tiles['up'])
