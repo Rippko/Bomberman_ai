@@ -14,6 +14,7 @@ class Player(Entity):
         self.__game_display = game_display
         self._movement_speed = 5
         self.__map = map
+        self.__map.add_player(self)
         self.__grid = self.__map.current_map
         self.__bombs = pygame.sprite.Group()
         self.__max_bombs = 2
