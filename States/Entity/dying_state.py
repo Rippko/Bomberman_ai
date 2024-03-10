@@ -1,5 +1,5 @@
 import pygame
-from States.state import State
+from States.Entity.state import State
 
 class DyingState(State):
     def __init__(self, name) -> None:
