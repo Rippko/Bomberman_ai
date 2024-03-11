@@ -130,47 +130,15 @@ class Map(Observer):
         #     for tile in row:
         #         pygame.draw.rect(game_display, BLUE, (tile.rect.x, tile.rect.y, tile.rect.width, tile.rect.height), 2)
                     
-    def __check_left(self, x: int, y: int, radius: int, crate_positions: list):
+    def __check_explosion_direction(self, x: int, y: int, radius: int, explosion_tiles: list, direction_x: int, direction_y: int):
         for k in range(1, radius + 1):
-            if 0 <= y - k < len(self.current_map[x]):
-                tile = self.current_map[x][y - k]
+            new_x, new_y = x + k * direction_x, y + k * direction_y
+            if 0 <= new_x < len(self.current_map) and 0 <= new_y < len(self.current_map[new_x]):
+                tile = self.current_map[new_x][new_y]
                 if isinstance(tile, Wall):
                     break
                 elif isinstance(tile, Crate) or isinstance(tile, Tile):
-                    crate_positions.append((tile, x, y - k))
-                    if isinstance(tile, Crate):
-                        break
-    
-    def __check_right(self, x: int, y: int, radius: int, crate_positions: list):
-        for k in range(1, radius + 1):
-            if 0 <= y + k < len(self.current_map[x]):
-                tile = self.current_map[x][y + k]
-                if isinstance(tile, Wall):
-                    break
-                elif isinstance(tile, Crate) or isinstance(tile, Tile):
-                    crate_positions.append((tile, x, y + k))
-                    if isinstance(tile, Crate):
-                        break
-    
-    def __check_up(self, x: int, y: int, radius: int, crate_positions: list):
-        for k in range(1, radius + 1):
-            if 0 <= x - k < len(self.current_map):
-                tile = self.current_map[x - k][y]
-                if isinstance(tile, Wall):
-                    break
-                elif isinstance(tile, Crate) or isinstance(tile, Tile):
-                    crate_positions.append((tile, x - k, y))
-                    if isinstance(tile, Crate):
-                        break
-    
-    def __check_down(self, x: int, y: int, radius: int, crate_positions: list):
-        for k in range(1, radius + 1):
-            if 0 <= x + k < len(self.current_map):
-                tile = self.current_map[x + k][y]
-                if isinstance(tile, Wall):
-                    break
-                elif isinstance(tile, Crate) or isinstance(tile, Tile):
-                    crate_positions.append((tile, x + k, y))
+                    explosion_tiles.append((tile, new_x, new_y))
                     if isinstance(tile, Crate):
                         break
        
@@ -197,10 +165,14 @@ class Map(Observer):
                         x = self.current_map.index(row)
                         y = row.index(tile)
                         explosion_tiles['center'].append((tile, x, y))
-                        self.__check_left(x, y, tile.explosion_radius, explosion_tiles['left'])
-                        self.__check_right(x, y, tile.explosion_radius, explosion_tiles['right'])
-                        self.__check_up(x, y, tile.explosion_radius, explosion_tiles['up'])
-                        self.__check_down(x, y, tile.explosion_radius, explosion_tiles['down'])
+                        # self.__check_left(x, y, tile.explosion_radius, explosion_tiles['left'])
+                        # self.__check_right(x, y, tile.explosion_radius, explosion_tiles['right'])
+                        # self.__check_up(x, y, tile.explosion_radius, explosion_tiles['up'])
+                        # self.__check_down(x, y, tile.explosion_radius, explosion_tiles['down'])
+                        self.__check_explosion_direction(x, y, tile.explosion_radius, explosion_tiles['left'], 0, -1)
+                        self.__check_explosion_direction(x, y, tile.explosion_radius, explosion_tiles['right'], 0, 1)
+                        self.__check_explosion_direction(x, y, tile.explosion_radius, explosion_tiles['up'], -1, 0)
+                        self.__check_explosion_direction(x, y, tile.explosion_radius, explosion_tiles['down'], 1, 0)
                         object.set_explosion(explosion_tiles)
                         self.__check_player_position(explosion_tiles)
                         self.__destroy_crates(explosion_tiles)
