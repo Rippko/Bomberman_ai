@@ -7,10 +7,12 @@ from States.Entity.dying_state import DyingState
 from Utilities.settings import *
 
 class Entity():
-    def __init__(self, x: int, y: int, entity_name: str, n_frames: tuple, s_width: int, s_height: int, scale) -> None:
+    def __init__(self, x: int, y: int, entity_name: str, key_bindings: list, n_frames: tuple, s_width: int, s_height: int, scale) -> None:
         self._x = x
         self._y = y
         self._all_actions = load(entity_name, n_frames, s_width, s_height, scale)
+        print(self._all_actions)
+        self._controls = key_bindings
         self._direction = Vector2(0, 0)
         self._current_delta_time = 0
         self._animation_speed = 0.1
@@ -54,7 +56,7 @@ class Entity():
             return 'front'
         
     def handle_keypress(self, keys) -> None:
-        latest_state = self.states[self._current_state.handle_event(keys)]
+        latest_state = self.states[self._current_state.handle_event(keys, self._controls)]
         if not self._current_state == latest_state:
             self._current_state = latest_state
             self._current_frame = 0
