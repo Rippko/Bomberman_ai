@@ -52,21 +52,19 @@ class Player(Entity):
                 if self.check_position(tile) and not isinstance(tile, Bomb):
                     bomb = Bomb(tile.rect.x, tile.rect.y, self.__bomb_strength, self.__game_display)
                     bomb.add_observer(self.__map)
+                    self.__map.bombs.add(bomb)
                     self.__bombs.add(bomb)
                     self.__grid[self.__grid.index(row)][row.index(tile)] = bomb
-                    return
     
     def update(self, pressed_keys, delta_time) -> None:
         collidables = [tile.rect for row in self.__grid for tile in row if isinstance(tile, Wall) or isinstance(tile, Crate)]
         if not self._current_state == self.states['Dying']:
             self.__check_keys(pressed_keys)
-            for bomb in self.__bombs:
+            for bomb in self.__map.bombs:
                 if self.rect.colliderect(bomb.rect):
                     continue
                 else:
                     collidables.append(bomb.rect)
-
-            self.__bombs.update(delta_time)
             
             self._move_horizontal()
             self.__handle_horizontal_collisions(self._horizontal_collisions(collidables))
@@ -79,12 +77,10 @@ class Player(Entity):
             super().update(self.__game_display, delta_time)
             
         else:
-            for bomb in self.__bombs:
+            for bomb in self.__map.bombs:
                 if self.rect.colliderect(bomb.rect):
                     continue
                 else:
                     collidables.append(bomb.rect)
-
-            self.__bombs.update(delta_time)
             
             super().update(self.__game_display, delta_time)
