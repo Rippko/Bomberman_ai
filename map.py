@@ -17,9 +17,8 @@ class Map(Observer):
         self.__origin_background = pygame.transform.scale(pygame.image.load('Assets/Backgrounds/background.png').convert_alpha(), (self.__width, self.__height))
         self.__current_background = self.__origin_background
         self.__players = []
-        
+        self.bombs = pygame.sprite.Group()
         self.origin_map = []
-        self.player_map = []
         self.__create_map()
         self.current_map = self.origin_map.copy()
         
@@ -65,7 +64,6 @@ class Map(Observer):
             for j in range(self.__columns):
                 current_row.append(Tile(x1 + j * tile_width, y1 + i * tile_height, tile_width))
             self.origin_map.append(current_row)
-            self.player_map.append(current_row)
             current_row = []
             
         for i in range(self.__columns):
@@ -118,13 +116,15 @@ class Map(Observer):
         self.__current_w = width
         self.__current_h = height
     
-    def render_map(self, game_display: pygame.display) -> None:
+    def render_map(self, game_display: pygame.display, delta_time) -> None:
         game_display.blit(self.__current_background, (0, 0))
         
         for row in self.current_map:
             for tile in row:
                 if isinstance(tile, Wall) or isinstance(tile, Crate):
                     game_display.blit(tile.image, (tile.rect.x, tile.rect.y))
+        
+        self.bombs.update(delta_time)
                     
         # for row in self.current_map:
         #     for tile in row:
@@ -165,10 +165,6 @@ class Map(Observer):
                         x = self.current_map.index(row)
                         y = row.index(tile)
                         explosion_tiles['center'].append((tile, x, y))
-                        # self.__check_left(x, y, tile.explosion_radius, explosion_tiles['left'])
-                        # self.__check_right(x, y, tile.explosion_radius, explosion_tiles['right'])
-                        # self.__check_up(x, y, tile.explosion_radius, explosion_tiles['up'])
-                        # self.__check_down(x, y, tile.explosion_radius, explosion_tiles['down'])
                         self.__check_explosion_direction(x, y, tile.explosion_radius, explosion_tiles['left'], 0, -1)
                         self.__check_explosion_direction(x, y, tile.explosion_radius, explosion_tiles['right'], 0, 1)
                         self.__check_explosion_direction(x, y, tile.explosion_radius, explosion_tiles['up'], -1, 0)
