@@ -11,7 +11,6 @@ class Entity():
         self._x = x
         self._y = y
         self._all_actions = load(entity_name, n_frames, s_width, s_height, scale)
-        print(self._all_actions)
         self._controls = key_bindings
         self._direction = Vector2(0, 0)
         self._current_delta_time = 0
