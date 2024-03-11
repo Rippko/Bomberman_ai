@@ -7,5 +7,5 @@ class State():
     def get_name(self) -> str:
         return self._name
     
-    def handle_event(self, keys):
+    def handle_event(self, keys, controls: list) -> str:
         pass

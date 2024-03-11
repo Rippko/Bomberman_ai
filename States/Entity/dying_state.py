@@ -5,5 +5,5 @@ class DyingState(State):
     def __init__(self, name) -> None:
         super().__init__(name)
         
-    def handle_event(self, keys) -> str:
+    def handle_event(self, keys, controls: list) -> str:
         return self._name
