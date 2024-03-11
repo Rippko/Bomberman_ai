@@ -27,7 +27,7 @@ class RunningState(GameState):
                             self.handle_fullscreen()
         
     def update(self, delta_time) -> None:
-        self.map.render_map(self._game.screen)
+        self.map.render_map(self._game.screen, delta_time)
         self._game.draw_text('PLAYER 1', (100 * self._game.width // self._game.width), (20 * self._game.height // self._game.height))
         
         self.handle_events()
