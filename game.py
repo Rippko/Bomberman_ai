@@ -1,6 +1,4 @@
 import pygame, time
-from Entities.player import Player
-from map import Map
 from Utilities.settings import *
 from States.Game.title_state import TitleState
 
@@ -22,10 +20,6 @@ class Game():
         
         self.game_states = []
         self.create_states()
-        
-    # def __handle_windowed(self, width: int, height: int) -> None:
-    #     self.__screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
-    #     self.__map.resize_map(width, height)
 
     def handle_fullscreen(self):
         self.screen = pygame.display.set_mode(self.__monitor_resolution, pygame.FULLSCREEN)
