@@ -33,8 +33,4 @@ def load(directory: str, n_frames: tuple, s_width: int, s_height: int, scale: fl
             
         i += 1
         
-        
-                        
-        
-            
     return all_actions_dictionary
