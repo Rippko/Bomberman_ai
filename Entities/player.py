@@ -5,36 +5,33 @@ from Obstacles.wall import Wall
 from Obstacles.crate import Crate
 from bomb import Bomb
 from Utilities.settings import *
-from Utilities.observable_object import ObservableObject
 from map import Map
 
 class Player(Entity):
     def __init__(self, coords: tuple, entity_name: str, key_bindings: list, n_frames: tuple, s_width: int, s_height: int, scale, map: Map, game_display: pygame.display) -> None:
-        super().__init__(coords[0], coords[1], entity_name, key_bindings, n_frames, s_width, s_height, scale)
+        super().__init__(coords[0], coords[1], entity_name, key_bindings, n_frames, s_width, s_height, scale, map)
         self._movement_speed = 5
-        self.__map = map
-        self.__map.add_player(self)
-        self.__grid = self.__map.current_map
+        self._map.add_player(self)
+        self.__grid = self._map.current_map
         self.__game_display = game_display
         self.__bombs = pygame.sprite.Group()
         self.__max_bombs = 2
         self.__bomb_strength = 2
-        self.__map_size = self.__map.calculate_game_plan_size()
         
     def __check_keys(self, pressed_keys) -> None:
         self._direction = Vector2(0, 0)
         
         self.handle_keypress(pressed_keys)
-        if (pressed_keys[self._controls[0]]) and self.rect.y > self.__map_size[2]:
+        if pressed_keys[self._controls[0]]:
             self._move_up()
-        elif (pressed_keys[self._controls[1]]) and self.rect.y < (self.__map_size[3] - self.rect.height - 5):
+        elif pressed_keys[self._controls[1]]:
             self._move_down()
-        elif (pressed_keys[self._controls[2]]) and self.rect.x > self.__map_size[0]:
+        elif pressed_keys[self._controls[2]]:
             self._move_left()
-        elif (pressed_keys[self._controls[3]]) and self.rect.x < (self.__map_size[1] - self.rect.width):
+        elif pressed_keys[self._controls[3]]:
             self._move_right()
                 
-        if pressed_keys[self._controls[4]] and len(self.__bombs) < self.__max_bombs:
+        if pressed_keys[self._controls[4]]:
             self.__place_bomb()
             
     def __handle_horizontal_collisions(self, collided: bool) -> None:
@@ -42,25 +39,27 @@ class Player(Entity):
         
     def __handle_vertical_collisions(self, collided: bool) -> None:
         if collided: self._direction.y = 0
-        
-    def check_position(self, tile) -> bool:
-        return int(self.rect.centerx) in range(int(tile.rect.x), int(tile.rect.x) + int(tile.rect.width)) and int(self.rect.centery) in range(int(tile.rect.y), int(tile.rect.y) + int(tile.rect.height))
     
     def __place_bomb(self) -> None:
-        for row in self.__grid:
-            for tile in row:
-                if self.check_position(tile) and not isinstance(tile, Bomb):
-                    bomb = Bomb(tile.rect.x, tile.rect.y, self.__bomb_strength, self.__game_display)
-                    bomb.add_observer(self.__map)
-                    self.__map.bombs.add(bomb)
-                    self.__bombs.add(bomb)
-                    self.__grid[self.__grid.index(row)][row.index(tile)] = bomb
+        if len(self.__bombs) < self.__max_bombs:
+            for row in self.__grid:
+                for tile in row:
+                    if self.check_position(tile) and not isinstance(tile, Bomb):
+                        bomb = Bomb(tile.rect.x, tile.rect.y, self.__bomb_strength, self.__game_display)
+                        bomb.add_observer(self._map)
+                        self._map.bombs.add(bomb)
+                        self.__bombs.add(bomb)
+                        self.__grid[self.__grid.index(row)][row.index(tile)] = bomb
+                    
+    def _snap_to_grid(self, grid_size):
+        self.rect.x = round(self.rect.x / grid_size) * grid_size
+        self.rect.y = round(self.rect.y / grid_size) * grid_size
     
     def update(self, pressed_keys, delta_time) -> None:
         collidables = [tile.rect for row in self.__grid for tile in row if isinstance(tile, Wall) or isinstance(tile, Crate)]
         if not self._current_state == self.states['Dying']:
             self.__check_keys(pressed_keys)
-            for bomb in self.__map.bombs:
+            for bomb in self._map.bombs:
                 if self.rect.colliderect(bomb.rect):
                     continue
                 else:
@@ -77,7 +76,7 @@ class Player(Entity):
             super().update(self.__game_display, delta_time)
             
         else:
-            for bomb in self.__map.bombs:
+            for bomb in self._map.bombs:
                 if self.rect.colliderect(bomb.rect):
                     continue
                 else:
