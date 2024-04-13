@@ -4,6 +4,7 @@ from .game_state import GameState
 from .pause_state import PauseState
 from Entities.player import Player
 from map import Map
+import time
 
 class RunningState(GameState):
     def __init__(self, game) -> None:
@@ -22,14 +23,14 @@ class RunningState(GameState):
                         new_state = PauseState(self._game)
                         new_state.enter_state()
                     if event.key == pygame.K_f:
-                        self._game.fullscreen = not self.__fullscreen
+                        self._game.fullscreen = not self._game.fullscreen
                         if self._game.fullscreen:
-                            self.handle_fullscreen()
+                            self._game.handle_fullscreen()
         
     def update(self, delta_time) -> None:
         self.map.render_map(self._game.screen, delta_time)
         self._game.draw_text('PLAYER 1', (100 * self._game.width // self._game.width), (20 * self._game.height // self._game.height))
-        
+            
         self.handle_events()
         
         pressed_keys = pygame.key.get_pressed()
