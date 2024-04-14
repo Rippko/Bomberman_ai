@@ -9,8 +9,8 @@ from map import Map
 
 class Entity():
     def __init__(self, x: int, y: int, entity_name: str, key_bindings: list, n_frames: tuple, s_width: int, s_height: int, scale, map: Map) -> None:
-        self._x = x
-        self._y = y
+        self.x = x
+        self.y = y
         self._map = map
         self._map_size = self._map.calculate_game_plan_size()
         self._all_actions = load(entity_name, n_frames, s_width, s_height, scale)
@@ -25,17 +25,25 @@ class Entity():
         
         self.image = self._all_actions['Idle']['front'][0]
         
-        self.__shrink_width = 4
-        self.__shrink_height = 15
+        self.__shrink_width = 25
+        self.__shrink_height = 30
         
         self.rect = self.image.get_rect(topleft=(x, y))
         self.rect.inflate_ip(-self.__shrink_width, -self.__shrink_height)
 
         self._movement_speed = 3
+        
+    def get_position(self) -> tuple:
+        for current_row, row in enumerate(self._map.current_map):
+            for current_tile, tile in enumerate(row):
+                if self.check_position(tile):
+                    return (current_row, current_tile)
+        return None
     
     def check_position(self, tile) -> bool:
-        return int(self.rect.centerx) in range(int(tile.rect.x), int(tile.rect.x) + int(tile.rect.width)) and int(self.rect.centery) in range(int(tile.rect.y), int(tile.rect.y) + int(tile.rect.height))
-        
+        return (int(tile.rect.x) <= int(self.rect.centerx) < int(tile.rect.x) + int(tile.rect.width)) and \
+            (int(tile.rect.y) <= int(self.rect.centery) < int(tile.rect.y) + int(tile.rect.height))
+
     def _move_left(self) -> None:
         if self.rect.x > self._map_size[0]:
             self._direction.x = -1
@@ -91,12 +99,12 @@ class Entity():
         
         current_image = self._all_actions[self._current_state.get_name()][self._get_direction()][self._current_frame]
         
-        game_display.blit(current_image, (self._x, self._y))
+        game_display.blit(current_image, (self.x, self.y))
             
     def _move_horizontal(self):
         if (self._direction.x == -1 and self.rect.x > self._map_size[0]) or (self._direction.x == 1 and self.rect.x < (self._map_size[1] - self.rect.width)):
-            self._x += self._direction.x * self._movement_speed
-            self.rect.x = self._x + (self.__shrink_width // 2)
+            self.x += self._direction.x * self._movement_speed
+            self.rect.x = self.x + (self.__shrink_width // 2)
         else:
             self._direction.x = 0
       
@@ -107,11 +115,11 @@ class Entity():
             if tile.colliderect(self.rect):
                 if self._direction.x < 0:
                     self.rect.left = tile.right
-                    self._x = self.rect.x - (self.__shrink_width // 2)
+                    self.x = self.rect.x - (self.__shrink_width // 2)
                             
                 elif self._direction.x > 0:
                     self.rect.right = tile.left
-                    self._x = self.rect.x - (self.__shrink_width // 2)
+                    self.x = self.rect.x - (self.__shrink_width // 2)
                     
                 collided = True
             
@@ -119,8 +127,8 @@ class Entity():
     
     def _move_vertical(self):
         if (self._direction.y == -1 and self.rect.y > self._map_size[2]) or (self._direction.y == 1 and self.rect.y < (self._map_size[3] - self.rect.height - 5)):
-            self._y += self._direction.y * self._movement_speed
-            self.rect.y = self._y + self.__shrink_height
+            self.y += self._direction.y * self._movement_speed
+            self.rect.y = self.y + self.__shrink_height
         else:
             self._direction.y = 0
     
@@ -131,18 +139,14 @@ class Entity():
             if tile.colliderect(self.rect):
                 if self._direction.y > 0:
                     self.rect.bottom = tile.top
-                    self._y = self.rect.y - self.__shrink_height
+                    self.y = self.rect.y - self.__shrink_height
                 elif self._direction.y < 0:
                     self.rect.top = tile.bottom
-                    self._y = self.rect.y - self.__shrink_height
+                    self.y = self.rect.y - self.__shrink_height
                 collided = True
         return collided
     
     def update(self, game_display: pygame.display, delta_time) -> None:
         self.animate(game_display, delta_time)
-        pygame.draw.line(game_display, RED, (self._map_size[0], self._map_size[2]), (self._map_size[1], self._map_size[2]), 3)
-        pygame.draw.line(game_display, RED, (self._map_size[0], self._map_size[3]), (self._map_size[1], self._map_size[3]), 3)
-        pygame.draw.line(game_display, RED, (self._map_size[0], self._map_size[2]), (self._map_size[0], self._map_size[3]), 3)
-        pygame.draw.line(game_display, RED, (self._map_size[1], self._map_size[2]), (self._map_size[1], self._map_size[3]), 3)
         pygame.draw.rect(game_display, RED, self.rect, 3)
         
