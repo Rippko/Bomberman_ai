@@ -48,6 +48,53 @@ class Map(Observer):
 
         return (int(min_x), int(max_x), int(min_y), int(max_y))
         
+    def get_map_state(self, player_position):
+        local_map_vector = []
+        x, y = player_position
+        print(f'x = {x}, y = {y}')
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                nx, ny = x + dx, y + dy
+                if 0 <= ny < self.__columns and 0 <= nx < len(self.current_map):
+                    tile = self.current_map[nx][ny]
+                    if type(tile) == Tile:
+                        local_map_vector.append(0)
+                    elif type(tile) == Wall:
+                        local_map_vector.append(1)
+                    elif type(tile) == Crate:
+                        local_map_vector.append(2)
+                    elif type(tile) == Bomb:
+                        local_map_vector.append(3)
+                else:
+                    local_map_vector.append(1)
+    
+        local_map_vector[4] = 4
+        
+        return local_map_vector
+    
+    def step(self, action):
+        player_position = self.__players[0].get_position()
+        if player_position is not None:
+            x, y = player_position
+            state = self.get_map_state(player_position)
+            self.__players[0].action_map[action]()
+            new_x, new_y = self.__players[0].get_position()
+            if new_x is not None and new_y is not None:
+                new_state = self.get_map_state(new_x, new_y)
+                reward = self.__calculate_reward(action, new_x, new_y)
+                done = self.__check_if_done()
+                return new_state, reward, done, None
+        return state, 0, False, None
+    
+    def __calculate_reward(self, action):
+        pass
+        
+    
+    def __check_if_done(self):
+        for player in self.__players:
+            if player.current_state == player.states['Dying']:
+                return True
+        return False
     
     def __create_map(self) -> None:
         x1, y1 = 0.062 * self.__width, 0.11 * self.__height
@@ -84,6 +131,7 @@ class Map(Observer):
                 self.origin_map[y][x] = Crate(self.origin_map[y][x].x, self.origin_map[y][x].y, tile_width, tile_height)
         
     def set_starting_postion(self, x: int, y: int) -> tuple:
+        print(self.origin_map[x][y].x, self.origin_map[x][y].y)
         return (self.origin_map[x][y].x, self.origin_map[x][y].y)
     
     def add_player(self, player) -> None:
@@ -125,6 +173,13 @@ class Map(Observer):
                     game_display.blit(tile.image, (tile.rect.x, tile.rect.y))
         
         self.bombs.update(delta_time)
+        
+        position = self.__players[0].get_position()
+        if position is not None:
+            x, y = position
+            self.get_map_state((x, y))
+        else:
+            print("Pozice hráče nebyla nalezena")
                     
         # for row in self.current_map:
         #     for tile in row:
@@ -154,6 +209,7 @@ class Map(Observer):
                 for tile, x, y in explosion_tiles[key]:
                     if player.check_position(tile):
                         player.set_dead()
+                        self.current_map[x][y] = Tile(tile.rect.x, tile.rect.y, tile.rect.width)
 
    
     def update(self, object) -> None:
