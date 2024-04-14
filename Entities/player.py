@@ -50,10 +50,6 @@ class Player(Entity):
                         self._map.bombs.add(bomb)
                         self.__bombs.add(bomb)
                         self.__grid[self.__grid.index(row)][row.index(tile)] = bomb
-                    
-    def _snap_to_grid(self, grid_size):
-        self.rect.x = round(self.rect.x / grid_size) * grid_size
-        self.rect.y = round(self.rect.y / grid_size) * grid_size
     
     def update(self, pressed_keys, delta_time) -> None:
         collidables = [tile.rect for row in self.__grid for tile in row if isinstance(tile, Wall) or isinstance(tile, Crate)]
