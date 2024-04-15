@@ -6,6 +6,9 @@ from States.Entity.walking_state import WalkingState
 from States.Entity.dying_state import DyingState
 from Utilities.settings import *
 from map import Map
+from Obstacles.tile import Tile
+from Obstacles.wall import Wall
+from Obstacles.crate import Crate
 
 class Entity():
     def __init__(self, x: int, y: int, entity_name: str, key_bindings: list, n_frames: tuple, s_width: int, s_height: int, scale, map: Map) -> None:
@@ -16,6 +19,7 @@ class Entity():
         self._all_actions = load(entity_name, n_frames, s_width, s_height, scale)
         self._controls = key_bindings
         self._direction = Vector2(0, 0)
+        self._wanted_direction = Vector2(0, 0)
         self._current_delta_time = 0
         self._animation_speed = 0.1
         self._current_frame = 0
@@ -25,7 +29,7 @@ class Entity():
         
         self.image = self._all_actions['Idle']['front'][0]
         
-        self.__shrink_width = 25
+        self.__shrink_width = 30
         self.__shrink_height = 30
         
         self.rect = self.image.get_rect(topleft=(x, y))
@@ -37,7 +41,7 @@ class Entity():
         for current_row, row in enumerate(self._map.current_map):
             for current_tile, tile in enumerate(row):
                 if self.check_position(tile):
-                    return (current_row, current_tile)
+                    return current_tile, current_row
         return None
     
     def check_position(self, tile) -> bool:
@@ -45,20 +49,27 @@ class Entity():
             (int(tile.rect.y) <= int(self.rect.centery) < int(tile.rect.y) + int(tile.rect.height))
 
     def _move_left(self) -> None:
+        self._wanted_direction = Vector2(0, 0)
         if self.rect.x > self._map_size[0]:
-            self._direction.x = -1
+            self._wanted_direction.x = -1
         
     def _move_right(self) -> None:
+        self._wanted_direction = Vector2(0, 0)
         if self.rect.x < (self._map_size[1] - self.rect.width):
-            self._direction.x = 1
+            self._wanted_direction.x = 1
         
     def _move_up(self) -> None:
+        self._wanted_direction = Vector2(0, 0)
         if self.rect.y > self._map_size[2]:
-            self._direction.y = -1
+            self._wanted_direction.y = -1
     
     def _move_down(self) -> None:
+        self._wanted_direction = Vector2(0, 0)
         if self.rect.y < (self._map_size[3] - self.rect.height - 5):
-            self._direction.y = 1
+            self._wanted_direction.y = 1
+            
+    def _stop_move(self) -> None:
+        self._wanted_direction = Vector2(0, 0)
     
     def _get_direction(self) -> str:
         if self._direction.x > 0:
@@ -72,8 +83,8 @@ class Entity():
         else:
             return 'front'
         
-    def handle_keypress(self, keys) -> None:
-        latest_state = self.states[self._current_state.handle_event(keys, self._controls)]
+    def handle_animation_state(self) -> None:
+        latest_state = self.states[self._current_state.handle_event(self._direction)]
         if not self._current_state == latest_state:
             self._current_state = latest_state
             self._current_frame = 0
@@ -92,11 +103,13 @@ class Entity():
                 self._current_frame += 1
             elif self._current_state.get_name() == 'Dying':
                 self._current_frame = len(self._all_actions[self._current_state.get_name()]['front']) - 1
+            elif self._current_state.get_name() == 'Idle':
+                self._current_frame = len(self._all_actions[self._current_state.get_name()]['front']) - 1
             else:
                 self._current_frame = 0
                 
             self._current_delta_time = 0
-        
+
         current_image = self._all_actions[self._current_state.get_name()][self._get_direction()][self._current_frame]
         
         game_display.blit(current_image, (self.x, self.y))
@@ -128,7 +141,7 @@ class Entity():
     def _move_vertical(self):
         if (self._direction.y == -1 and self.rect.y > self._map_size[2]) or (self._direction.y == 1 and self.rect.y < (self._map_size[3] - self.rect.height - 5)):
             self.y += self._direction.y * self._movement_speed
-            self.rect.y = self.y + self.__shrink_height
+            self.rect.y = self.y + self.__shrink_height / 2
         else:
             self._direction.y = 0
     
@@ -147,6 +160,28 @@ class Entity():
         return collided
     
     def update(self, game_display: pygame.display, delta_time) -> None:
+        position = self.get_position()
+        if position is not None:
+            x, y = position
+            posLeft,posRight,posTop,posBottom = self._map_size
+
+            tile_width = (posRight - posLeft) / self._map._columns
+            tile_height = (posBottom - posTop) / self._map._rows
+
+            if abs(x*tile_width - (self.x - posLeft)) < 3 and abs(y*tile_height - self.y + posTop) < 3:
+                
+                dirX = x + int(self._wanted_direction.x)
+                dirY = y + int(self._wanted_direction.y)
+                if (dirX >= 0 and dirX < self._map._columns) and (dirY >= 0 and dirY < self._map._rows):
+                    tile = type(self._map.current_map[dirY][dirX])
+                else:
+                    tile = Wall
+
+                if tile == Wall or tile == Crate:
+                    self._wanted_direction = Vector2(0, 0)
+                self._direction = self._wanted_direction
+                self.handle_animation_state()
+                
         self.animate(game_display, delta_time)
-        pygame.draw.rect(game_display, RED, self.rect, 3)
+        pygame.draw.rect(game_display, (255, 0, 0), self.rect, 2)
         

@@ -18,21 +18,20 @@ class Player(Entity):
         self.__max_bombs = 2
         self.__bomb_strength = 2
         
-    def __check_keys(self, pressed_keys) -> None:
-        self._direction = Vector2(0, 0)
+    def _check_keys(self, pressed_keys) -> None:
+        self._wanted_direction = Vector2(0, 0)
         
-        self.handle_keypress(pressed_keys)
-        if pressed_keys[self._controls[0]]:
+        if (pressed_keys[self._controls[0]]):
             self._move_up()
-        elif pressed_keys[self._controls[1]]:
+        elif (pressed_keys[self._controls[1]]):
             self._move_down()
-        elif pressed_keys[self._controls[2]]:
+        elif (pressed_keys[self._controls[2]]):
             self._move_left()
-        elif pressed_keys[self._controls[3]]:
+        elif (pressed_keys[self._controls[3]]):
             self._move_right()
                 
-        if pressed_keys[self._controls[4]]:
-            self.__place_bomb()
+        if pressed_keys[self._controls[4]] and len(self.__bombs) < self.__max_bombs:
+            self._place_bomb()
             
     def __handle_horizontal_collisions(self, collided: bool) -> None:
         if collided: self._direction.x = 0
@@ -40,7 +39,7 @@ class Player(Entity):
     def __handle_vertical_collisions(self, collided: bool) -> None:
         if collided: self._direction.y = 0
     
-    def __place_bomb(self) -> None:
+    def _place_bomb(self) -> None:
         if len(self.__bombs) < self.__max_bombs:
             for row in self.__grid:
                 for tile in row:
@@ -54,7 +53,7 @@ class Player(Entity):
     def update(self, pressed_keys, delta_time) -> None:
         collidables = [tile.rect for row in self.__grid for tile in row if isinstance(tile, Wall) or isinstance(tile, Crate)]
         if not self._current_state == self.states['Dying']:
-            self.__check_keys(pressed_keys)
+            self._check_keys(pressed_keys)
             for bomb in self._map.bombs:
                 if self.rect.colliderect(bomb.rect):
                     continue
