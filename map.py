@@ -155,7 +155,6 @@ class Map(Observer):
         #         self.origin_map[y][x] = Crate(self.origin_map[y][x].x, self.origin_map[y][x].y, tile_width, tile_height)
         
     def set_starting_postion(self, x: int, y: int) -> tuple:
-        print(self.origin_map[x][y].x, self.origin_map[x][y].y)
         return (self.origin_map[x][y].x, self.origin_map[x][y].y)
     
     def add_player(self, player) -> None:
