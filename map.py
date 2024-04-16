@@ -12,8 +12,8 @@ class Map(Observer):
     def __init__(self, width: int, height: int) -> None:
         self.__width = width
         self.__height = height
-        self.__columns = 25
-        self.__rows = 13
+        self._columns = 25
+        self._rows = 13
         self.__origin_background = pygame.transform.scale(pygame.image.load('Assets/Backgrounds/background.png').convert_alpha(), (self.__width, self.__height))
         self.__current_background = self.__origin_background
         self.__players = []
@@ -51,12 +51,11 @@ class Map(Observer):
     def get_map_state(self, player_position):
         local_map_vector = []
         x, y = player_position
-        print(f'x = {x}, y = {y}')
+        print(f'Player position: {x}, {y}')
         for dy in range(-1, 2):
             for dx in range(-1, 2):
-                nx, ny = x + dx, y + dy
-                if 0 <= ny < self.__columns and 0 <= nx < len(self.current_map):
-                    tile = self.current_map[nx][ny]
+                if 0 <= x + dx < len(self.current_map[0]) and 0 <= y + dy < len(self.current_map):
+                    tile = self.current_map[y + dy][x + dx]
                     if type(tile) == Tile:
                         local_map_vector.append(0)
                     elif type(tile) == Wall:
@@ -72,63 +71,88 @@ class Map(Observer):
         
         return local_map_vector
     
-    def step(self, action):
-        player_position = self.__players[0].get_position()
-        if player_position is not None:
-            x, y = player_position
-            state = self.get_map_state(player_position)
-            self.__players[0].action_map[action]()
-            new_x, new_y = self.__players[0].get_position()
-            if new_x is not None and new_y is not None:
-                new_state = self.get_map_state(new_x, new_y)
-                reward = self.__calculate_reward(action, new_x, new_y)
-                done = self.__check_if_done()
-                return new_state, reward, done, None
-        return state, 0, False, None
-    
-    def __calculate_reward(self, action):
-        pass
+    def step(self, action, player):
+        if player is None:
+            return
+        else:
+            player.action_map[action]()
+            new_state = self.get_map_state(player.get_position())
+            reward = self.__calculate_reward(action, player)
+            done  = self.__check_if_game_over(player)
+            return  new_state, reward, done, None
+            
+    def __calculate_reward(self, action, player):
+        current_state = self.get_map_state(player.get_position())
+        match action:
+            case 0:
+                if self.__check_for_wall(current_state):
+                    return -1
+                else:
+                    return 1
+            case 1:
+                if self.__check_for_wall(current_state):
+                    return -1
+                else:
+                    return 1
+            case 2:
+                if self.__check_for_wall(current_state):
+                    return -1
+                else:
+                    return 1
+            case 3:
+                if self.__check_for_wall(current_state):
+                    return -1
+                else:
+                    return 1
+            case 4:
+                return -3
         
-    
-    def __check_if_done(self):
-        for player in self.__players:
-            if player.current_state == player.states['Dying']:
-                return True
+        
+    def __check_for_wall(self, state):
+        for i in range(len(state)):
+            if i == 1 or i == 3 or i == 5 or i == 7:
+                if state[i] == 1:
+                    return True
+        return False
+            
+    def __check_if_game_over(self, player):
+        if player._current_state == player.states['Dying']:
+            return True
         return False
     
     def __create_map(self) -> None:
         x1, y1 = 0.062 * self.__width, 0.11 * self.__height
         x2, y2 = 0.941 * self.__width, 0.11 * self.__height
         width = x2 - x1
-        tile_width = width / self.__columns
+        tile_width = width / self._columns
         x3, y3 = 0.941 * self.__width, 0.11 * self.__height
         x4, y4 = 0.941 * self.__width, 0.87 * self.__height
         height = y4 - y3
-        tile_height = height / self.__rows
+        tile_height = height / self._rows
         
         current_row = []
-        for i in range(self.__rows):
-            for j in range(self.__columns):
+        for i in range(self._rows):
+            for j in range(self._columns):
                 current_row.append(Tile(x1 + j * tile_width, y1 + i * tile_height, tile_width))
             self.origin_map.append(current_row)
             current_row = []
             
-        for i in range(self.__columns):
-            for j in range(self.__rows):
-                if (i == 0 and j == 0) or (i == self.__columns - 1 and j == 0) or (i == 0 and j == self.__rows - 1) or (i == self.__columns - 1 and j == self.__rows - 1):
+        for i in range(self._columns):
+            for j in range(self._rows):
+                if (i == 0 and j == 0) or (i == self._columns - 1 and j == 0) or (i == 0 and j == self._rows - 1) or (i == self._columns - 1 and j == self._rows - 1):
                     continue
                 if i % 2 == 0 and j % 2 == 0:
                     self.origin_map[j][i] = Wall(self.origin_map[j][i].x, self.origin_map[j][i].y, tile_width, tile_height)
                     
-        n_crates = int(len(self.origin_map[0]) * 1) * self.__rows
+        n_crates = int(len(self.origin_map[0]) * 1) * self._rows
         
-        for i in range(n_crates):
-            x = random.randint(0, self.__columns - 1)
-            y = random.randint(0, self.__rows - 1)
-            if (0 <= x <= 1 or self.__columns - 2 <= x <= self.__columns - 1) and (0 <= y <= 1 or self.__rows - 2 <= y <= self.__rows - 1):
-                continue
-            elif not isinstance(self.origin_map[y][x], Wall):
-                self.origin_map[y][x] = Crate(self.origin_map[y][x].x, self.origin_map[y][x].y, tile_width, tile_height)
+        # for i in range(n_crates):
+        #     x = random.randint(0, self._columns - 1)
+        #     y = random.randint(0, self._rows - 1)
+        #     if (0 <= x <= 1 or self._columns - 2 <= x <= self._columns - 1) and (0 <= y <= 1 or self._rows - 2 <= y <= self._rows - 1):
+        #         continue
+        #     elif not isinstance(self.origin_map[y][x], Wall):
+        #         self.origin_map[y][x] = Crate(self.origin_map[y][x].x, self.origin_map[y][x].y, tile_width, tile_height)
         
     def set_starting_postion(self, x: int, y: int) -> tuple:
         print(self.origin_map[x][y].x, self.origin_map[x][y].y)
@@ -173,13 +197,14 @@ class Map(Observer):
                     game_display.blit(tile.image, (tile.rect.x, tile.rect.y))
         
         self.bombs.update(delta_time)
-        
-        position = self.__players[0].get_position()
-        if position is not None:
-            x, y = position
-            self.get_map_state((x, y))
-        else:
-            print("Pozice hráče nebyla nalezena")
+
+        # position = self.__players[0].get_position()
+        # if position is not None:
+        #     x, y = position
+        #     self.get_map_state((x, y))
+        # else:
+            
+        #     print("Pozice hráče nebyla nalezena")
                     
         # for row in self.current_map:
         #     for tile in row:
