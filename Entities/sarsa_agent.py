@@ -12,7 +12,7 @@ class SARSA_agent(AiPlayer):
         self.gamma = 0.99
         self.epsilon = 0.4
         self.done = False
-        self.decision_interval = 0.3
+        self.decision_interval = 1
         self.last_decision_time = time.time()
         
         self.map_env = map
@@ -56,7 +56,6 @@ class SARSA_agent(AiPlayer):
             return False
 
     def choose_action(self, state):
-        """ Choose an action using the epsilon-greedy policy. """
         if np.random.uniform(0, 1) < self.epsilon:
             action = random.choice(list(self.action_map.keys()))
             print('Random action:', action)
@@ -67,14 +66,12 @@ class SARSA_agent(AiPlayer):
         return action
 
     def update_q_table(self, state, action, reward, next_state, next_action):
-        """ Update Q-values using the SARSA formula. """
         predict = self.Q_table[state, action]
         target = reward + self.gamma * self.Q_table[next_state, next_action]
         self.Q_table[state, action] += self.alpha * (target - predict)
         self.save_Q_table('Q_table.npy')
 
     def learn(self, initial_state):
-        """ Implement the SARSA learning process within the environment. """
         state = self.state_to_index(self.map_env.get_map_state(self.get_position()))
         action = self.choose_action(state)
         next_state, reward, self.done, info = self.map_env.step(action, self)
