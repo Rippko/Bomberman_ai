@@ -10,9 +10,10 @@ class SARSA_agent(AiPlayer):
         super().__init__(coords, entity_name, n_frames, s_width, s_height, scale, map, game_display)
         self.alpha = 0.1
         self.gamma = 0.99
-        self.epsilon = 0.4
+        self.epsilon = 0.7
+        self.num_of_episodes = 0
         self.done = False
-        self.decision_interval = 1
+        self.decision_interval = 0.5
         self.last_decision_time = time.time()
         
         self.map_env = map
@@ -22,10 +23,10 @@ class SARSA_agent(AiPlayer):
             2: self._move_up,
             3: self._move_down,
             4: self._stop_move,
-            # 5: self.place_bomb
+            5: self.place_bomb
         }
-        #390625
-        self.num_states = 390625
+        #390625 - 5 akcí, 393216 - 6 akcí
+        self.num_states = 393216
         self.num_actions = len(self.action_map)
         self.base = self.num_actions
         if not self.load_Q_table('Q_table.npy'):
@@ -42,7 +43,7 @@ class SARSA_agent(AiPlayer):
         
     def load_Q_table(self, filename) -> bool:
         try:
-            loaded_data = np.load(filename)  # Načti data jednou
+            loaded_data = np.load(filename)
             if loaded_data.shape == (self.num_states, self.num_actions):
                 self.Q_table = loaded_data
                 print('Q-table loaded successfully.')
@@ -58,11 +59,11 @@ class SARSA_agent(AiPlayer):
     def choose_action(self, state):
         if np.random.uniform(0, 1) < self.epsilon:
             action = random.choice(list(self.action_map.keys()))
-            print('Random action:', action)
+            # print('Random action:', action)
         else:
             action_index = np.argmax(self.Q_table[state, :])
             action = list(self.action_map.keys())[action_index]
-            print('Best action:', action)
+            # print('Best action:', action)
         return action
 
     def update_q_table(self, state, action, reward, next_state, next_action):
@@ -72,7 +73,7 @@ class SARSA_agent(AiPlayer):
         self.save_Q_table('Q_table.npy')
 
     def learn(self, initial_state):
-        state = self.state_to_index(self.map_env.get_map_state(self.get_position()))
+        state = self.state_to_index(initial_state)
         action = self.choose_action(state)
         next_state, reward, self.done, info = self.map_env.step(action, self)
         next_state = self.state_to_index(next_state)
@@ -88,6 +89,14 @@ class SARSA_agent(AiPlayer):
         else:
             current_time = time.time()
             if current_time - self.last_decision_time > self.decision_interval:
+                
+                self.num_of_episodes += 1
+                print('Episodes:', self.num_of_episodes)
+                if self.num_of_episodes > 200 and self.epsilon > 0.3:
+                    self.epsilon -= 0.1
+                    self.num_of_episodes = 0
+                    print('Epsilon:', self.epsilon)
+                    
                 self.learn(self.map_env.get_map_state(self.get_position()))
                 self.last_decision_time = current_time
             super().update(delta_time)
