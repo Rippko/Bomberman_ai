@@ -10,7 +10,7 @@ class SARSA_agent(AiPlayer):
         super().__init__(coords, entity_name, n_frames, s_width, s_height, scale, map, game_display)
         self.alpha = 0.1
         self.gamma = 0.99
-        self.epsilon = 0.7
+        self.epsilon = 0.3
         self.num_of_episodes = 0
         self.done = False
         self.decision_interval = 0.5
@@ -46,10 +46,8 @@ class SARSA_agent(AiPlayer):
             loaded_data = np.load(filename)
             if loaded_data.shape == (self.num_states, self.num_actions):
                 self.Q_table = loaded_data
-                print('Q-table loaded successfully.')
                 return True
             else:
-                print('Q-table loaded with incorrect shape.')
                 return False
         except FileNotFoundError:
             return False
@@ -67,10 +65,11 @@ class SARSA_agent(AiPlayer):
         return action
 
     def update_q_table(self, state, action, reward, next_state, next_action):
-        predict = self.Q_table[state, action]
-        target = reward + self.gamma * self.Q_table[next_state, next_action]
-        self.Q_table[state, action] += self.alpha * (target - predict)
-        self.save_Q_table('Q_table.npy')
+        if self.load_Q_table('Q_table.npy'):
+            predict = self.Q_table[state, action]
+            target = reward + self.gamma * self.Q_table[next_state, next_action]
+            self.Q_table[state, action] += self.alpha * (target - predict)
+            self.save_Q_table('Q_table.npy')
 
     def learn(self, initial_state):
         state = self.state_to_index(initial_state)
@@ -97,6 +96,6 @@ class SARSA_agent(AiPlayer):
                     self.num_of_episodes = 0
                     print('Epsilon:', self.epsilon)
                     
-                self.learn(self.map_env.get_map_state(self.get_position()))
+                self.learn(self.map_env.get_map_state(self._get_position_in_grid(self.x, self.y)))
                 self.last_decision_time = current_time
             super().update(delta_time)
