@@ -16,7 +16,7 @@ class AiPlayer(Entity):
         self.__game_display = game_display
         self.__bombs = pygame.sprite.Group()
         self.__max_bombs = 2
-        self.__bomb_strength = 2
+        self.__bomb_strength = 1
             
     def __handle_horizontal_collisions(self, collided: bool) -> None:
         if collided: self._direction.x = 0
@@ -25,15 +25,17 @@ class AiPlayer(Entity):
         if collided: self._direction.y = 0
     
     def place_bomb(self) -> None:
-        if len(self.__bombs) < self.__max_bombs:
-            for row in self.__grid:
-                for tile in row:
-                    if self.check_position(tile) and not isinstance(tile, Bomb):
+            if len(self.__bombs) < self.__max_bombs:
+                position = self.get_position()
+                if position is not None:
+                    x, y = position
+                    tile = self.__grid[y][x]
+                    if not isinstance(tile, Bomb):
                         bomb = Bomb(tile.rect.x, tile.rect.y, self.__bomb_strength, self.__game_display)
                         bomb.add_observer(self._map)
                         self._map.bombs.add(bomb)
                         self.__bombs.add(bomb)
-                        self.__grid[self.__grid.index(row)][row.index(tile)] = bomb
+                        self.__grid[y][x] = bomb
     
     def update(self, delta_time) -> None:
         collidables = [tile.rect for row in self.__grid for tile in row if isinstance(tile, Wall) or isinstance(tile, Crate)]
