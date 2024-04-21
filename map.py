@@ -23,6 +23,8 @@ class Map(Observer):
         self.current_map = self.origin_map.copy()
         
         self.tile_width = self.origin_map[0][0].rect.width
+        self.tile_height = self.origin_map[0][0].rect.height
+        self.map_size = self.calculate_game_plan_size()
         self.__current_w = self.__width
         self.__current_h = self.__height
         
@@ -68,6 +70,7 @@ class Map(Observer):
                         local_map_vector.append(1)
         
             local_map_vector[4] = 4
+            print(local_map_vector)
             
             return local_map_vector
         return None
@@ -77,59 +80,60 @@ class Map(Observer):
             return
         else:
             player.action_map[action]()
-            new_state = self.get_map_state(player.get_position())
+            new_state = self.get_map_state(player._get_position_in_grid(player.x, player.y))
             reward = self.__calculate_reward(action, new_state, player)
             done  = self.__check_if_game_over(player)
             return  new_state, reward, done, None
             
     def __calculate_reward(self, action, new_state, player):
         if self.__check_if_game_over(player):
-            print('30')
-            return 30
+            print('-30')
+            return -30
         elif action in [0, 1, 2, 3, 4]:
             if self.__check_collision(action, new_state):
                 print('-6')
                 return -6
             elif action == 4:
-                print('0')
-                return 0
+                if self.__check_for_bomb(new_state):
+                    print('-7')
+                    return -7
+                else:
+                    print('0')
+                    return 0
             else:
                 print('2')
                 return 2
         elif action == 5:
-            if self.__check_for_bomb(action, new_state):
+            if self.__check_for_crate(new_state):
                 print('5')
                 return 5
             else:
                 print('-5')
                 return -5
             
-    def __check_for_bomb(self, action, state):
-        if state[1] == 2:
+    def __check_for_crate(self, state):
+        if state[1] == 2 or state[3] == 2 or state[5] == 2 or state[7] == 2:
             return True
-        elif state[3] == 2:
-            return True
-        elif state[5] == 2:
-            return True
-        elif state[7] == 2:
+        return False
+    
+    def __check_for_bomb(self, state):
+        if 3 in state:
+            print('Bomb found')
             return True
         return False
         
     def __check_collision(self, action, state):
         if action == 0 and state[3] in [1, 2]:
             return True
-        elif action == 1 and state[5] in [1, 2]:
+        if action == 1 and state[5] in [1, 2]:
             return True
-        elif action == 2 and state[1] in [1, 2]:
+        if action == 2 and state[1] in [1, 2]:
             return True
-        elif action == 3 and state[7]in [1, 2]:
+        if action == 3 and state[7]in [1, 2]:
             return True
         return False
         
     def __check_if_game_over(self, player):
-        # if player.get_position() == (6, 4):
-        #     return True
-        # return False
         if player._current_state == player.states['Dying']:
             return True
         return False
@@ -151,12 +155,12 @@ class Map(Observer):
             self.origin_map.append(current_row)
             current_row = []
                     
-        # for i in range(self._columns):
-        #     for j in range(self._rows):
-        #         if (i == 0 and j == 0) or (i == self._columns - 1 and j == 0) or (i == 0 and j == self._rows - 1) or (i == self._columns - 1 and j == self._rows - 1):
-        #             continue
-        #         if i % 2 == 0 and j % 2 == 0:
-        #             self.origin_map[j][i] = Wall(self.origin_map[j][i].x, self.origin_map[j][i].y, tile_width, tile_height)
+        for i in range(self._columns):
+            for j in range(self._rows):
+                if (i == 0 and j == 0) or (i == self._columns - 1 and j == 0) or (i == 0 and j == self._rows - 1) or (i == self._columns - 1 and j == self._rows - 1):
+                    continue
+                if i % 2 == 0 and j % 2 == 0:
+                    self.origin_map[j][i] = Wall(self.origin_map[j][i].x, self.origin_map[j][i].y, tile_width, tile_height)
                     
         # n_crates = int(len(self.origin_map[0]) * 1) * self._rows
         n_crates = 100
@@ -211,14 +215,6 @@ class Map(Observer):
                     game_display.blit(tile.image, (tile.rect.x, tile.rect.y))
         
         self.bombs.update(delta_time)
-
-        # position = self.__players[0].get_position()
-        # if position is not None:
-        #     x, y = position
-        #     self.get_map_state((x, y))
-        # else:
-            
-        #     print("Pozice hráče nebyla nalezena")
                     
         # for row in self.current_map:
         #     for tile in row:
