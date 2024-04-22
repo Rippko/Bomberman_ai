@@ -14,7 +14,7 @@ class Game():
         self.__monitor_resolution = [pygame.display.Info().current_w, pygame.display.Info().current_h]
         self.__clock = pygame.time.Clock()
 
-        self.font = pygame.font.Font('Assets/Fonts/VCR_OSD_MONO_1.001.ttf', (35 * self.height // self.height))
+        #self.font = pygame.font.Font('Assets/Fonts/VCR_OSD_MONO_1.001.ttf', (35 * self.height // self.height))
         
         self.__last_time = time.time()
         
@@ -23,11 +23,6 @@ class Game():
 
     def handle_fullscreen(self):
         self.screen = pygame.display.set_mode(self.__monitor_resolution, pygame.FULLSCREEN)
-                            
-    def draw_text(self, text: str, x: int, y: int) -> None:
-        text_surface = self.font.render(text, True, BLACK)
-        text_rect = text_surface.get_rect(center=(x, y))
-        self.screen.blit(text_surface, (text_rect.x, text_rect.y))
         
     def create_states(self) -> None:
         self.game_states.append(TitleState(self))
