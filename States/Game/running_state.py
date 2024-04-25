@@ -14,7 +14,7 @@ class RunningState(GameState):
         
     def initialize(self) -> None:
         self.map = Map(self._game.width, self._game.height)
-        self.player1 = Player(self.map.set_starting_postion(0, 0), 'player_1', PLAYER_1_CONTROLS, (8, 7, 4), 32, 32, 2.2, self.map, self._game.screen)
+        #self.player1 = Player(self.map.set_starting_postion(0, 0), 'player_1', PLAYER_1_CONTROLS, (8, 7, 4), 32, 32, 2.2, self.map, self._game.screen)
         self.sarsa_agent = SARSA_agent(self.map.set_starting_postion(0, 24), 'player_1', (8, 7, 4), 32, 32, 2.2, self.map, self._game.screen)
 
         self.all_players = self.map.get_players()
@@ -42,8 +42,9 @@ class RunningState(GameState):
         for player in self.all_players:
             if type(player) == SARSA_agent:
                 if player.done:
-                    player.save_Q_table('Q_table.npy')
+                    player.save_Q_table('Q_table.pkl')
                     self.initialize()
+                
                 player.update(delta_time)
             else:
                 player.update(pressed_keys, delta_time)
