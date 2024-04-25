@@ -4,9 +4,18 @@ from Obstacles.wall import Wall
 from Obstacles.crate import Crate
 from bomb import Bomb
 from Utilities.settings import *
-import random
 from Utilities.asset_loader import AssetLoader
 from Utilities.observer import Observer
+from enum import Enum
+import random
+
+class Action(Enum):
+    MOVE_LEFT = 0
+    MOVE_RIGHT = 1
+    MOVE_UP = 2
+    MOVE_DOWN = 3
+    STOP_MOVE = 4
+    PLACE_BOMB = 5
 
 class Map(Observer):
     def __init__(self, width: int, height: int) -> None:
@@ -27,6 +36,8 @@ class Map(Observer):
         self.map_size = self.calculate_game_plan_size()
         self.__current_w = self.__width
         self.__current_h = self.__height
+        
+        self.max_explosion_radius = 3
         
     def get_players(self) -> list:
         return self.__players
@@ -54,82 +65,141 @@ class Map(Observer):
         local_map_vector = []
         if player_position is not None:
             x, y = player_position
-            for dy in range(-1, 2):
-                for dx in range(-1, 2):
-                    if 0 <= x + dx < len(self.current_map[0]) and 0 <= y + dy < len(self.current_map):
-                        tile = self.current_map[y + dy][x + dx]
-                        if type(tile) == Tile:
-                            local_map_vector.append(0)
-                        elif type(tile) == Wall:
-                            local_map_vector.append(1)
-                        elif type(tile) == Crate:
-                            local_map_vector.append(2)
-                        elif type(tile) == Bomb:
-                            local_map_vector.append(3)
-                    else:
+            directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+            for dx, dy in directions:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < len(self.current_map[0]) and 0 <= ny < len(self.current_map):
+                    tile = self.current_map[ny][nx]
+                    if type(tile) == Tile:
+                        local_map_vector.append(0)
+                    elif type(tile) == Wall:
                         local_map_vector.append(1)
-        
-            local_map_vector[4] = 4
-            print(local_map_vector)
-            
-            return local_map_vector
+                    elif type(tile) == Crate:
+                        local_map_vector.append(2)
+                    elif type(tile) == Bomb:
+                        local_map_vector.append(3)
+                else:
+                    local_map_vector.append(1)
+
+            in_danger = self.is_in_explosion_range((x, y))
+            local_map_vector.append(in_danger)
+            return tuple(local_map_vector)
         return None
+
+    def is_in_explosion_range(self, position):
+        x, y = position
+        directions = [(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)]
+        for dx, dy in directions:
+            for distance in range(0, self.max_explosion_radius + 1):
+                nx, ny = x + dx * distance, y + dy * distance
+                if not (0 <= nx < len(self.current_map[0]) and 0 <= ny < len(self.current_map)):
+                    break
+                tile = self.current_map[ny][nx]
+                if isinstance(tile, Wall):
+                    break
+                if isinstance(tile, Bomb) and distance <= tile.explosion_radius:
+                    if dx == 0 and dy == 0:
+                        return 'bomb_center'
+                    elif dx == -1 and dy == 0:
+                        return 'bomb_left'
+                    elif dx == 1 and dy == 0:
+                        return 'bomb_right'
+                    elif dx == 0 and dy == -1:
+                        return 'bomb_up'
+                    elif dx == 0 and dy == 1:
+                        return 'bomb_down'
+        return 'safe'
     
-    def step(self, action, player):
+    def step(self, action, state, player):
         if player is None:
             return
         else:
-            player.action_map[action]()
+            if action == Action.PLACE_BOMB:
+                player.action_map[Action.STOP_MOVE]()
+                player.action_map[action]()
+            else:
+                player.action_map[action]()
+                
+            reward = self.__calculate_reward(action, state, player)
             new_state = self.get_map_state(player._get_position_in_grid(player.x, player.y))
-            reward = self.__calculate_reward(action, new_state, player)
             done  = self.__check_if_game_over(player)
             return  new_state, reward, done, None
-            
-    def __calculate_reward(self, action, new_state, player):
-        if self.__check_if_game_over(player):
-            print('-30')
-            return -30
-        elif action in [0, 1, 2, 3, 4]:
-            if self.__check_collision(action, new_state):
-                print('-6')
-                return -6
-            elif action == 4:
-                if self.__check_for_bomb(new_state):
-                    print('-7')
-                    return -7
-                else:
-                    print('0')
-                    return 0
-            else:
-                print('2')
-                return 2
-        elif action == 5:
-            if self.__check_for_crate(new_state):
-                print('5')
-                return 5
-            else:
-                print('-5')
-                return -5
-            
-    def __check_for_crate(self, state):
-        if state[1] == 2 or state[3] == 2 or state[5] == 2 or state[7] == 2:
-            return True
-        return False
+        
+    # nechodit do stěn - DONE
+    # nechodit do bomb - DONE
+    # nestat v okoli bomby - DONE
+    # nestat v bombě DONE
+    # polozi bombu + DONE
+    # jde po tilech + DONE
     
-    def __check_for_bomb(self, state):
-        if 3 in state:
-            print('Bomb found')
-            return True
-        return False
+    # nechodit do krabic -
+    # polozi bombu naprázdno -
+    # polozi bombu vedle zdi -
+    # polozi bombu vedle krabice +
+
+    
+            
+    def __calculate_reward(self, action, state, player):
+        reward = 0
+        if self.__check_if_game_over(player):
+            print('-30 because game over')
+            reward += -30
+        elif action in [Action.MOVE_LEFT, Action.MOVE_RIGHT, Action.MOVE_UP, Action.MOVE_DOWN]:
+            if self.__check_collision(action, state) and state[4] == 'safe':
+                print('-10 because went into wall')
+                reward += -10
+            elif state[4] != 'safe':
+                reward += self.__check_bomb_reward(action, state)
+            else:
+                print('2 because moving on tile')
+                reward += 2
+        elif action == Action.STOP_MOVE:
+            if state[4] != 'safe':
+                print('-20 because standing still and bomb is near')
+                reward += -20
+            else:
+                print('-2 because standing still')
+                reward += -2
+        elif action == Action.PLACE_BOMB:
+            if state[4] == 'safe':
+                if 2 in state[:4]:
+                    print('15 because placing bomb next to crate')
+                    reward += 15
+                else:
+                    print('-10 because placing bomb')
+                    reward += -10
+            
+        return reward
+    
+    def __check_bomb_reward(self, action, state):
+        if action == Action.MOVE_LEFT and state[4] == 'bomb_left':
+            print('-20 because bomb is on the left')
+            return -20
+        elif action == Action.MOVE_RIGHT and state[4] == 'bomb_right':
+            print('-20 because bomb is on the right')
+            return -20
+        elif action == Action.MOVE_UP and state[4] == 'bomb_up':
+            print('-20 because bomb is on the up')
+            return -20
+        elif action == Action.MOVE_DOWN and state[4] == 'bomb_down':
+            print('-20 because bomb is on the down')
+            return -20
+        else:
+            if self.__check_collision(action, state):
+                print('-30 because went into wall while bomb is near')
+                return -30
+            else:
+                print('20 because moving away from bomb')
+                return 20
         
     def __check_collision(self, action, state):
-        if action == 0 and state[3] in [1, 2]:
+        if action == Action.MOVE_LEFT and state[0] in [1, 2]:
             return True
-        if action == 1 and state[5] in [1, 2]:
+        elif action == Action.MOVE_RIGHT and state[1] in [1, 2]:
             return True
-        if action == 2 and state[1] in [1, 2]:
+        elif action == Action.MOVE_DOWN and state[3] in [1, 2]:
             return True
-        if action == 3 and state[7]in [1, 2]:
+        elif action == Action.MOVE_UP and state[2] in [1, 2]:
             return True
         return False
         
