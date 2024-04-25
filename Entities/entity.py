@@ -103,8 +103,6 @@ class Entity():
                 self._current_frame = len(self._all_actions[self._current_state.get_name()]['front']) - 1
             elif self._current_frame < len(self._all_actions[self._current_state.get_name()][self._get_direction()]) - 1:
                 self._current_frame += 1
-            # elif self._current_state.get_name() == 'Idle':
-            #     self._current_frame = len(self._all_actions[self._current_state.get_name()]['front']) - 1
             else:
                 self._current_frame = 0
                 
