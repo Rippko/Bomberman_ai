@@ -16,7 +16,7 @@ class Player(Entity):
         self.__game_display = game_display
         self.__bombs = pygame.sprite.Group()
         self.__max_bombs = 2
-        self.__bomb_strength = 2
+        self.bomb_strength = 2
         
     def _check_keys(self, pressed_keys) -> None:
         self._wanted_direction = Vector2(0, 0)
@@ -44,7 +44,7 @@ class Player(Entity):
             for row in self.__grid:
                 for tile in row:
                     if self.check_position(tile) and not isinstance(tile, Bomb):
-                        bomb = Bomb(tile.rect.x, tile.rect.y, self.__bomb_strength, self.__game_display)
+                        bomb = Bomb(tile.rect.x, tile.rect.y, self.bomb_strength, self.__game_display)
                         bomb.add_observer(self._map)
                         self._map.bombs.add(bomb)
                         self.__bombs.add(bomb)
