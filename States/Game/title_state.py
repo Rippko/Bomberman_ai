@@ -17,6 +17,13 @@ class TitleState(GameState):
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_f:
+                        self._game.fullscreen = not self._game.fullscreen
+                        if self._game.fullscreen:
+                            self._game.handle_fullscreen()
+                        else:
+                            self._game.screen = pygame.display.set_mode((self._game.width, self._game.height))
         if self.start_button.check_clicked():
             new_state = RunningState(self._game)
             new_state.enter_state()
