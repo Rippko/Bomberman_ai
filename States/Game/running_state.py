@@ -11,7 +11,7 @@ import time
 class RunningState(GameState):
     def __init__(self, game) -> None:
         GameState.__init__(self, game)
-        self.epsilon = None
+        self.epsilon = 1
         self.episodes = 0
         self._q_table = Q_table('Q_table.pkl')
         self.initialize()
@@ -59,15 +59,19 @@ class RunningState(GameState):
         if dead_players >= len(self.all_players) - 1:
             self._q_table.save_Q_table()
             self.initialize()
+
+        if self.episodes == 20000:
+            self.epsilon -= 0.05
+            for player in self.all_players:
+                if type(player) == SARSA_agent and player.epsilon > 0.2:
+                    player.epsilon = self.epsilon
+                    print(f'Epsilon: {self.epsilon}')
+            self.episodes = 0
                 
         for player in self.all_players:
             if type(player) == SARSA_agent:
-                if self.episodes == 200000 and player.epsilon > 0.3:
-                    player.epsilon -= 0.05
-                    self.epsilon = player.epsilon
-                    self.episodes = 0
-                    print(f'New epsilon: {player.epsilon}')
                 player.update(delta_time)
-                self.episodes += 1
             else:
                 player.update(pressed_keys, delta_time)
+
+        self.episodes += 1
