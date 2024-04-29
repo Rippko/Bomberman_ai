@@ -4,18 +4,28 @@ from .game_state import GameState
 from .pause_state import PauseState
 from Entities.player import Player
 from Entities.sarsa_agent import SARSA_agent
+from Q_table import Q_table
 from map import Map
 import time
 
 class RunningState(GameState):
     def __init__(self, game) -> None:
         GameState.__init__(self, game)
+        self.epsilon = None
+        self.episodes = 0
+        self._q_table = Q_table('Q_table.pkl')
         self.initialize()
         
     def initialize(self) -> None:
         self.map = Map(self._game.width, self._game.height)
+        self._q_table.load_Q_table()
         #self.player1 = Player(self.map.set_starting_postion(0, 0), 'player_1', PLAYER_1_CONTROLS, (8, 7, 4), 32, 32, 2.2, self.map, self._game.screen)
-        self.sarsa_agent = SARSA_agent(self.map.set_starting_postion(0, 24), 'player_1', (8, 7, 4), 32, 32, 2.2, self.map, self._game.screen)
+        self.sarsa_agent = SARSA_agent(self.map.set_starting_postion(0, 0), 'player_1', (8, 7, 4), 32, 32, 2.2, self.map, self._q_table, self._game.screen)
+        self.sarsa_agent2 = SARSA_agent(self.map.set_starting_postion(0, 24), 'player_2', (8, 7, 4), 32, 32, 2.2, self.map, self._q_table, self._game.screen)
+        self.sarsa_agent3 = SARSA_agent(self.map.set_starting_postion(12, 0), 'player_3', (8, 7, 4), 32, 32, 2.2, self.map,  self._q_table, self._game.screen)
+        self.sarsa_agent4 = SARSA_agent(self.map.set_starting_postion(12, 24), 'player_4', (8, 7, 4), 32, 32, 2.2, self.map,  self._q_table, self._game.screen)
+        if self.epsilon is not None:
+            self.sarsa_agent.epsilon = self.epsilon
 
         self.all_players = self.map.get_players()
     
@@ -32,6 +42,8 @@ class RunningState(GameState):
                         self._game.fullscreen = not self._game.fullscreen
                         if self._game.fullscreen:
                             self._game.handle_fullscreen()
+                        else:
+                            self._game.screen = pygame.display.set_mode((self._game.width, self._game.height))
         
     def update(self, delta_time) -> None:
         self.map.render_map(self._game.screen, delta_time)
@@ -39,12 +51,23 @@ class RunningState(GameState):
         
         pressed_keys = pygame.key.get_pressed()
         
+        dead_players = 0
+        for player in self.all_players:
+            if player._current_state == player.states['Dying'] and player._current_frame == len(player._all_actions[player._current_state.get_name()]['front']) - 1:
+                dead_players += 1
+                
+        if dead_players >= len(self.all_players) - 1:
+            self._q_table.save_Q_table()
+            self.initialize()
+                
         for player in self.all_players:
             if type(player) == SARSA_agent:
-                if player.done:
-                    player.save_Q_table('Q_table.pkl')
-                    self.initialize()
-                
+                if self.episodes == 200000 and player.epsilon > 0.3:
+                    player.epsilon -= 0.05
+                    self.epsilon = player.epsilon
+                    self.episodes = 0
+                    print(f'New epsilon: {player.epsilon}')
                 player.update(delta_time)
+                self.episodes += 1
             else:
                 player.update(pressed_keys, delta_time)
