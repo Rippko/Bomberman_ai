@@ -7,12 +7,12 @@ class Q_table:
     
     def save_Q_table(self):
         with open(self.filename, 'wb') as f:
-            pickle.dump(self.Q_table, f)
+            pickle.dump(self.data, f)
     
     def load_Q_table(self) -> None:
         try:
             with open(self.filename,'rb') as file:
-                    self.Q_table = pickle.load(file)
+                    self.data = pickle.load(file)
             return True
         except FileNotFoundError:
             print(f"Error: File not found - {self.filename}")
