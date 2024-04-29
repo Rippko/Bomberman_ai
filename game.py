@@ -21,7 +21,7 @@ class Game():
         self.game_states = []
         self.create_states()
 
-    def handle_fullscreen(self):
+    def handle_fullscreen(self) -> None:
         self.screen = pygame.display.set_mode(self.__monitor_resolution, pygame.FULLSCREEN)
         
     def create_states(self) -> None:
