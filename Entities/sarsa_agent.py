@@ -12,7 +12,7 @@ class SARSA_agent(AiPlayer):
         super().__init__(coords, entity_name, n_frames, s_width, s_height, scale, map, game_display)
         self.alpha = 0.1
         self.gamma = 0.7
-        self.epsilon = 0.5
+        self.epsilon = 0.1
         self.num_of_episodes = 0
         self.done = False
         self.decision_interval = 0.2
@@ -36,14 +36,12 @@ class SARSA_agent(AiPlayer):
             if len(self._bombs) < self._max_bombs:
                 action = random.choice(list(self.action_map.keys()))
             else:
-                action = random.choice(list(self.action_map.keys())[:4])
-            
-            #print('Random choosen')
+                action = random.choice(list(self.action_map.keys())[:-1])
         else:
             if len(self._bombs) < self._max_bombs:
                 action = Action(np.argmax(self.Q_table.data[state]))
             else:
-                action = Action(np.argmax(self.Q_table.data[state][:4]))
+                action = Action(np.argmax(self.Q_table.data[state][:-1]))
         return action
 
     def update_q_table(self, state, action, reward, next_state, next_action):
