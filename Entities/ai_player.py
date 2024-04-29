@@ -14,8 +14,8 @@ class AiPlayer(Entity):
         self._map.add_player(self)
         self.__grid = self._map.current_map
         self.__game_display = game_display
-        self.__bombs = pygame.sprite.Group()
-        self.__max_bombs = 1
+        self._bombs = pygame.sprite.Group()
+        self._max_bombs = 1
         self.bomb_strength = 1
             
     def __handle_horizontal_collisions(self, collided: bool) -> None:
@@ -25,7 +25,7 @@ class AiPlayer(Entity):
         if collided: self._direction.y = 0
     
     def place_bomb(self) -> None:
-        if len(self.__bombs) < self.__max_bombs:
+        if len(self._bombs) < self._max_bombs:
             position = self.get_position()
             if position is not None:
                 x, y = position
@@ -34,7 +34,7 @@ class AiPlayer(Entity):
                     bomb = Bomb(tile.rect.x, tile.rect.y, self.bomb_strength, self.__game_display)
                     bomb.add_observer(self._map)
                     self._map.bombs.add(bomb)
-                    self.__bombs.add(bomb)
+                    self._bombs.add(bomb)
                     self.__grid[y][x] = bomb
     
     def update(self, delta_time) -> None:
@@ -51,8 +51,6 @@ class AiPlayer(Entity):
             
             self._move_vertical()
             self.__handle_vertical_collisions(self._vertical_collisions(collidables))
-
-            #pygame.draw.rect(game_display, GREEN, (self.rect.x, self.rect.y, self.rect.w, self.rect.h))
             
             super().update(self.__game_display, delta_time)
             
