@@ -16,7 +16,8 @@ class Entity():
         self.y = y
         self._map = map
         # self._map_size = self._map.calculate_game_plan_size()
-        self._all_actions = load(entity_name, n_frames, s_width, s_height, scale)
+        self._entity_name = entity_name
+        self._all_actions = load(self._entity_name, n_frames, s_width, s_height, scale)
         self._controls = key_bindings
         self._direction = Vector2(0, 0)
         self._wanted_direction = Vector2(0, 0)
@@ -97,22 +98,23 @@ class Entity():
         
     def animate(self, game_display: pygame.display, delta_time):
         self._current_delta_time += delta_time
-         
+        state = self._current_state.get_name()
+        direction = self._get_direction()
+        if state == 'Dying':
+                direction = 'front'
+        
         if self._current_delta_time >= self._animation_speed:
-            if self._current_state.get_name() == 'Dying':
-                self._current_frame = len(self._all_actions[self._current_state.get_name()]['front']) - 1
-            elif self._current_frame < len(self._all_actions[self._current_state.get_name()][self._get_direction()]) - 1:
+            if self._current_frame < len(self._all_actions[state][direction]) - 1:
                 self._current_frame += 1
+            elif state == 'Dying':
+                self._current_frame = len(self._all_actions[state][direction]) - 1
             else:
                 self._current_frame = 0
                 
             self._current_delta_time = 0
-        if self._current_state.get_name() == 'Dying':
-            current_image = self._all_actions[self._current_state.get_name()]['front'][self._current_frame]
-        else:
-            current_image = self._all_actions[self._current_state.get_name()][self._get_direction()][self._current_frame]
+        current_image = self._all_actions[state][direction][self._current_frame]
         
-        game_display.blit(current_image, (self.x, self.y))
+        game_display.blit(current_image, (self.x, self.y-10))
             
     def _move_horizontal(self) -> None:
         if (self._direction.x == -1 and self.rect.x > self._map.map_size[0]) or (self._direction.x == 1 and self.rect.x < (self._map.map_size[1] - self.rect.width)):
@@ -197,7 +199,6 @@ class Entity():
                     self._wanted_direction = Vector2(0, 0)
                 self._direction = self._wanted_direction
                 self.handle_animation_state()
-
         self.animate(game_display, delta_time)
-        pygame.draw.rect(game_display, (255, 0, 0), self.rect, 2)
+        # pygame.draw.rect(game_display, (255, 0, 0), self.rect, 2)
         
