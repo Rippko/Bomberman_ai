@@ -13,11 +13,7 @@ class Game():
         self.fullscreen = False
         self.__monitor_resolution = [pygame.display.Info().current_w, pygame.display.Info().current_h]
         self.__clock = pygame.time.Clock()
-
-        #self.font = pygame.font.Font('Assets/Fonts/VCR_OSD_MONO_1.001.ttf', (35 * self.height // self.height))
-        
         self.__last_time = time.time()
-        
         self.game_states = []
         self.create_states()
 

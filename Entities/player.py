@@ -14,9 +14,9 @@ class Player(Entity):
         self._map.add_player(self)
         self.__grid = self._map.current_map
         self.__game_display = game_display
-        self.__bombs = pygame.sprite.Group()
-        self.__max_bombs = 2
-        self.bomb_strength = 2
+        self._bombs = pygame.sprite.Group()
+        self._max_bombs = 1
+        self.bomb_strength = 1
         
     def _check_keys(self, pressed_keys) -> None:
         self._wanted_direction = Vector2(0, 0)
@@ -30,8 +30,8 @@ class Player(Entity):
         elif (pressed_keys[self._controls[3]]):
             self._move_right()
                 
-        if pressed_keys[self._controls[4]] and len(self.__bombs) < self.__max_bombs:
-            self._place_bomb()
+        if pressed_keys[self._controls[4]] and len(self._bombs) < self._max_bombs:
+            self.place_bomb()
             
     def __handle_horizontal_collisions(self, collided: bool) -> None:
         if collided: self._direction.x = 0
@@ -39,16 +39,18 @@ class Player(Entity):
     def __handle_vertical_collisions(self, collided: bool) -> None:
         if collided: self._direction.y = 0
     
-    def _place_bomb(self) -> None:
-        if len(self.__bombs) < self.__max_bombs:
-            for row in self.__grid:
-                for tile in row:
-                    if self.check_position(tile) and not isinstance(tile, Bomb):
-                        bomb = Bomb(tile.rect.x, tile.rect.y, self.bomb_strength, self.__game_display)
-                        bomb.add_observer(self._map)
-                        self._map.bombs.add(bomb)
-                        self.__bombs.add(bomb)
-                        self.__grid[self.__grid.index(row)][row.index(tile)] = bomb
+    def place_bomb(self) -> None:
+        if len(self._bombs) < self._max_bombs:
+            position = self.get_position()
+            if position is not None:
+                x, y = position
+                tile = self.__grid[y][x]
+                if not isinstance(tile, Bomb):
+                    bomb = Bomb(tile.rect.x, tile.rect.y, self.bomb_strength, self.__game_display)
+                    bomb.add_observer(self._map)
+                    self._map.bombs.add(bomb)
+                    self._bombs.add(bomb)
+                    self.__grid[y][x] = bomb
     
     def update(self, pressed_keys, delta_time) -> None:
         collidables = [tile.rect for row in self.__grid for tile in row if isinstance(tile, Wall) or isinstance(tile, Crate)]
@@ -65,8 +67,6 @@ class Player(Entity):
             
             self._move_vertical()
             self.__handle_vertical_collisions(self._vertical_collisions(collidables))
-
-            #pygame.draw.rect(game_display, GREEN, (self.rect.x, self.rect.y, self.rect.w, self.rect.h))
             
             super().update(self.__game_display, delta_time)
             

@@ -13,7 +13,6 @@ class SARSA_agent(AiPlayer):
         self.alpha = 0.1
         self.gamma = 0.7
         self.epsilon = 0.1
-        self.num_of_episodes = 0
         self.done = False
         self.decision_interval = 0.2
         self.last_decision_time = time.time()
@@ -31,7 +30,7 @@ class SARSA_agent(AiPlayer):
 
         self.Q_table = Q_table
 
-    def choose_action(self, state):
+    def choose_action(self, state) -> Action:
         if np.random.uniform(0, 1) < self.epsilon:
             if len(self._bombs) < self._max_bombs:
                 action = random.choice(list(self.action_map.keys()))
@@ -44,12 +43,12 @@ class SARSA_agent(AiPlayer):
                 action = Action(np.argmax(self.Q_table.data[state][:-1]))
         return action
 
-    def update_q_table(self, state, action, reward, next_state, next_action):
+    def update_q_table(self, state, action, reward, next_state, next_action) -> None:
         predict = self.Q_table.data[state][action.value]
         target = reward + self.gamma * self.Q_table.data[next_state][next_action.value]
         self.Q_table.data[state][action.value] += self.alpha * (target - predict)
 
-    def learn(self, initial_state):
+    def learn(self, initial_state) -> None:
         state = initial_state
         if state not in self.Q_table.data.keys():
             self.Q_table.data[state] = [0] * self.num_actions
@@ -62,7 +61,7 @@ class SARSA_agent(AiPlayer):
         next_action = self.choose_action(next_state)
         self.update_q_table(state, action, reward, next_state, next_action)
         
-    def update(self, delta_time):
+    def update(self, delta_time) -> None:
         if not self.done:
             current_time = time.time()
             if current_time - self.last_decision_time > self.decision_interval:

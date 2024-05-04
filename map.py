@@ -176,7 +176,7 @@ class Map(Observer):
                     print('2 because moving on tile')
                     reward += 2
         elif action == Action.STOP_MOVE:
-            if state[8] in ['bomb_left', 'bomb_right', 'bomb_up', 'bomb_down']:
+            if state[8] in ['bomb_left', 'bomb_right', 'bomb_up', 'bomb_down', 'bomb_center']:
                 print('-20 because standing still and bomb is near')
                 reward += -20
             else:
@@ -278,15 +278,14 @@ class Map(Observer):
                 if i % 2 == 0 and j % 2 == 0:
                     self.origin_map[j][i] = Wall(self.origin_map[j][i].x, self.origin_map[j][i].y, tile_width, tile_height)
                     
-        # n_crates = len(self.origin_map[0]) * self._rows
-        n_crates = 150
+        n_crates = len(self.origin_map[0]) * self._rows
         
         for i in range(n_crates):
             x = random.randint(0, self._columns - 1)
             y = random.randint(0, self._rows - 1)
             if (0 <= x <= 1 or self._columns - 2 <= x <= self._columns - 1) and (0 <= y <= 1 or self._rows - 2 <= y <= self._rows - 1):
                 continue
-            elif not isinstance(self.origin_map[y][x], Wall):
+            elif not isinstance(self.origin_map[y][x], Wall) and not isinstance(self.origin_map[y][x], Crate):
                 self.origin_map[y][x] = Crate(self.origin_map[y][x].x, self.origin_map[y][x].y, tile_width, tile_height)
         
     def set_starting_postion(self, x: int, y: int) -> tuple:

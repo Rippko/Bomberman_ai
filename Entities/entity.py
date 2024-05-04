@@ -15,7 +15,6 @@ class Entity():
         self.x = x
         self.y = y
         self._map = map
-        # self._map_size = self._map.calculate_game_plan_size()
         self._entity_name = entity_name
         self._all_actions = load(self._entity_name, n_frames, s_width, s_height, scale)
         self._controls = key_bindings
@@ -131,13 +130,10 @@ class Entity():
                 if self._direction.x < 0:
                     self.rect.left = tile.right
                     self.x = self.rect.x - (self.__shrink_width // 2)
-                            
                 elif self._direction.x > 0:
                     self.rect.right = tile.left
                     self.x = self.rect.x - (self.__shrink_width // 2)
-                    
                 collided = True
-            
         return collided
     
     def _move_vertical(self) -> None:
@@ -200,5 +196,3 @@ class Entity():
                 self._direction = self._wanted_direction
                 self.handle_animation_state()
         self.animate(game_display, delta_time)
-        # pygame.draw.rect(game_display, (255, 0, 0), self.rect, 2)
-        
